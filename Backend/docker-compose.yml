@@ -1,0 +1,18 @@
+version: '3'
+services:
+  api:
+    build: ./API
+    ports:
+      - "3000:3000"
+    volumes:
+    - almacenamientoVideos:/mnt/volumen
+    network_mode: host
+
+  transcoder:
+    build: ./Transcodificador
+    volumes:
+      - almacenamientoVideos:/mnt/volumen
+    network_mode: host
+
+volumes:
+  almacenamientoVideos:
