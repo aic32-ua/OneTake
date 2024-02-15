@@ -5,7 +5,7 @@ const { exec } = require('child_process');
 const queue = 'QueueNode';
 
 async function setupRabbitMQ() {
-    var connection = await amqp.connect('amqp://api');
+    var connection = await amqp.connect('amqp://rabbitmq');
     channel = await connection.createChannel(); //variable global para poder usar la cola en los diferentes endpoints
     await channel.assertQueue(queue, { durable: true });
 }

@@ -50,7 +50,7 @@ app.get('/usuarios/:id/video', async function(req, res){
 })
 
 async function setupRabbitMQ() {
-    var connection = await amqp.connect('amqp://transcoder');
+    var connection = await amqp.connect('amqp://rabbitmq');
     channel = await connection.createChannel(); //variable global para poder usar la cola en los diferentes endpoints
     await channel.assertQueue(queue, { durable: true });
 }
