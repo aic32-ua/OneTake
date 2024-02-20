@@ -1,0 +1,7 @@
+{
+  "name": "OneTake",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
