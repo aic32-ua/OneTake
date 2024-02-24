@@ -11,7 +11,7 @@ const path = require('path');
 const fs = require('fs');
 const amqp = require('amqplib');
 
-const queue = 'QueueNode';
+const queue = 'OneTakeQueue';
 
 const multer = require('multer');
 const storage = multer.diskStorage({
@@ -33,6 +33,94 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+const { Sequelize, DataTypes } = require('sequelize');
+const { Console } = require('console');
+
+const sequelize = new Sequelize('OneTake', 'user', '1234', {
+  host: 'mysql',
+  dialect: 'mysql'
+});
+
+const Usuario = sequelize.define('USUARIO', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    nombre: {
+        type: DataTypes.STRING,
+    },
+    email: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    nick: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    password: {
+        type: DataTypes.STRING,
+        allowNull: false
+    }
+}, {
+    tableName: 'USUARIO',
+    timestamps: false
+});
+
+const PeticionAmistad = sequelize.define('PETICION_AMISTAD', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    id_enviador: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Usuario',
+        key: 'id'
+      }
+    },
+    id_receptor: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Usuario',
+        key: 'id'
+      }
+    }
+}, {
+    tableName: 'PETICION_AMISTAD',
+    timestamps: false
+});
+
+const RelacionAmistad = sequelize.define('RELACION_AMISTAD', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    id_usuario1: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Usuario',
+        key: 'id'
+      }
+    },
+    id_usuario2: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Usuario',
+        key: 'id'
+      }
+    }
+}, {
+    tableName: 'RELACION_AMISTAD',
+    timestamps: false
+});
+
 app.post('/usuarios/:id/video', upload.single('video'), async function(req, res){
     await channel.sendToQueue(queue, Buffer.from(req.params.id + path.extname(req.file.originalname))); //pongo el nombre del archivo en la cola
     res.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
@@ -47,6 +135,77 @@ app.get('/usuarios/:id/video', async function(req, res){
             res.sendFile(videoPath);
         }
     });
+})
+
+app.post('/usuarios', async function(req,resp){
+    usu = req.body
+    if(usu.nombre && usu.email && usu.password && usu.nick){
+        // usuEmail = await knex.select().from('Usuario').where('email', usu.email)
+        // usuNick = await knex.select().from('Usuario').where('nick_name', usu.nick_name)
+        // if(usuEmail.length > 0){
+        //     resp.status(400)
+        //     resp.send({
+        //         code:2,
+        //         message: "Ya existe un usuario con ese email."
+        //     })
+        // }
+        // else if(usuNick.length > 0){
+        //     resp.status(400)
+        //     resp.send({
+        //         code:2,
+        //         message: "Ya existe un usuario con ese nick."
+        //     })
+        // }
+        // else{
+            try{
+                var creado = await Usuario.create({
+                    nombre: usu.nombre,
+                    email: usu.email,
+                    nick: usu.nick,
+                    password: usu.password
+                });
+                  
+                resp.setHeader('Location', 'http://localhost:3000/usuarios/' + creado.id)
+                resp.status(201)
+                resp.send(creado)
+            }
+            catch(error){
+                console.log(error)
+            }
+        //}
+    }
+    else{
+        resp.status(400)
+        resp.send({
+            code:1,
+            message: "Faltan datos"
+        })
+    }
+})
+
+app.get('/usuarios/:id',async function(pet,resp) {
+    id = parseInt(pet.params.id)
+    if(isNaN(id)){
+        resp.status(400)
+        resp.send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+    else{
+        item = await Usuario.findByPk(id)
+        if(!item){
+            resp.status(404)
+            resp.send({
+                code:3,
+                message: "El dato no existe"
+            })
+        }
+        else{
+            resp.status(200)
+            resp.send(item)
+        }
+    }
 })
 
 async function setupRabbitMQ() {

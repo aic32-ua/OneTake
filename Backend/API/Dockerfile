@@ -1,9 +1,9 @@
-FROM node:14
+FROM node:18.17.0
 
 WORKDIR /app
 COPY . .
 
-RUN npm install
+RUN npm install -g npm@latest
 
 EXPOSE 3000
 

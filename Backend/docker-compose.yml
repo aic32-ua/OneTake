@@ -25,6 +25,21 @@ services:
     networks:
       - oneTakeNetwork
 
+  mysql:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: OneTake
+      MYSQL_USER: user
+      MYSQL_PASSWORD: 1234
+    ports:
+      - "3306:3306"
+    networks:
+      - oneTakeNetwork
+    volumes:
+      - ./API/sql-scripts/script.sql:/docker-entrypoint-initdb.d/script.sql
+
 networks:
   oneTakeNetwork:
 

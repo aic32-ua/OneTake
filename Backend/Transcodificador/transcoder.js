@@ -2,7 +2,7 @@ const amqp = require('amqplib');
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
-const queue = 'QueueNode';
+const queue = 'OneTakeQueue';
 
 async function setupRabbitMQ() {
     var connection = await amqp.connect('amqp://rabbitmq');
