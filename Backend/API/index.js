@@ -7,6 +7,8 @@ app.use(cors());
 var bp = require('body-parser')
 app.use(bp.json())
 
+var passwordHash = require('password-hash');
+
 const path = require('path');
 const fs = require('fs');
 const amqp = require('amqplib');
@@ -33,8 +35,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-const { Sequelize, DataTypes } = require('sequelize');
-const { Console } = require('console');
+const { Sequelize, DataTypes, where } = require('sequelize');
 
 const sequelize = new Sequelize('OneTake', 'user', '1234', {
   host: 'mysql',
@@ -140,23 +141,27 @@ app.get('/usuarios/:id/video', async function(req, res){
 app.post('/usuarios', async function(req,resp){
     usu = req.body
     if(usu.nombre && usu.email && usu.password && usu.nick){
-        // usuEmail = await knex.select().from('Usuario').where('email', usu.email)
-        // usuNick = await knex.select().from('Usuario').where('nick_name', usu.nick_name)
-        // if(usuEmail.length > 0){
-        //     resp.status(400)
-        //     resp.send({
-        //         code:2,
-        //         message: "Ya existe un usuario con ese email."
-        //     })
-        // }
-        // else if(usuNick.length > 0){
-        //     resp.status(400)
-        //     resp.send({
-        //         code:2,
-        //         message: "Ya existe un usuario con ese nick."
-        //     })
-        // }
-        // else{
+        usuEmail = await Usuario.findOne({where: {
+            email: usu.email
+        }})
+        usuNick = await Usuario.findOne({where: {
+            nick: usu.nick
+        }})
+        if(usuEmail.length > 0){
+            resp.status(400)
+            resp.send({
+                code:2,
+                message: "Ya existe un usuario con ese email."
+            })
+        }
+        else if(usuNick.length > 0){
+            resp.status(400)
+            resp.send({
+                code:2,
+                message: "Ya existe un usuario con ese nick."
+            })
+        }
+        else{
             try{
                 var creado = await Usuario.create({
                     nombre: usu.nombre,
@@ -172,7 +177,7 @@ app.post('/usuarios', async function(req,resp){
             catch(error){
                 console.log(error)
             }
-        //}
+        }
     }
     else{
         resp.status(400)

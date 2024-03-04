@@ -14,7 +14,8 @@ CREATE TABLE PETICION_AMISTAD (
     id_enviador INT NOT NULL,
     id_receptor INT NOT NULL,
     FOREIGN KEY (id_enviador) REFERENCES USUARIO(id),
-    FOREIGN KEY (id_receptor) REFERENCES USUARIO(id)
+    FOREIGN KEY (id_receptor) REFERENCES USUARIO(id),
+    UNIQUE (id_enviador, id_receptor)
 );
 
 CREATE TABLE RELACION_AMISTAD (
@@ -22,5 +23,6 @@ CREATE TABLE RELACION_AMISTAD (
     id_usuario1 INT NOT NULL,
     id_usuario2 INT NOT NULL,
     FOREIGN KEY (id_usuario1) REFERENCES USUARIO(id),
-    FOREIGN KEY (id_usuario2) REFERENCES USUARIO(id)
+    FOREIGN KEY (id_usuario2) REFERENCES USUARIO(id),
+    UNIQUE (id_usuario1, id_usuario2)
 );
