@@ -9,6 +9,11 @@ app.use(bp.json())
 
 var passwordHash = require('password-hash');
 
+var jwt = require('jsonwebtoken');
+
+var secret = "123456";
+var expiresIn = 3600; //1 hora
+
 const path = require('path');
 const fs = require('fs');
 const amqp = require('amqplib');
@@ -35,7 +40,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-const { Sequelize, DataTypes, where } = require('sequelize');
+const { Sequelize, DataTypes} = require('sequelize');
 
 const sequelize = new Sequelize('OneTake', 'user', '1234', {
   host: 'mysql',
@@ -122,39 +127,43 @@ const RelacionAmistad = sequelize.define('RELACION_AMISTAD', {
     timestamps: false
 });
 
-app.post('/usuarios/:id/video', upload.single('video'), async function(req, res){
-    await channel.sendToQueue(queue, Buffer.from(req.params.id + path.extname(req.file.originalname))); //pongo el nombre del archivo en la cola
-    res.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
-})
+function verificarToken(token, id){
+    try{
 
-app.get('/usuarios/:id/video', async function(req, res){
-    const videoPath = path.join('/mnt/volumen/procesados', req.params.id + '.mp4');
-    fs.access(videoPath, fs.constants.F_OK, (err) => {
-        if (err) {
-            res.status(404).json({ error: 'Video no encontrado.' });
-        } else {
-            res.sendFile(videoPath);
+        const decoded = jwt.verify(token,secret)
+
+        if(!decoded || !decoded.idToken){
+            return {code: 1, msg: "Token invalido"};
         }
-    });
-})
+        else if(decoded.idToken != id){
+            return {code: 4, msg:"No autorizado"};
+        }
+        else{
+            return {code: 0}
+        }
+    }
+    catch(Exception){
+        if (Exception instanceof jwt.TokenExpiredError) {
+            return {code: 5, msg:"Token expirado"};
+        }
+        return {code: 1, msg: "Token invalido"};
+    }
+}
 
+//1. registro
 app.post('/usuarios', async function(req,resp){
     usu = req.body
     if(usu.nombre && usu.email && usu.password && usu.nick){
-        usuEmail = await Usuario.findOne({where: {
-            email: usu.email
-        }})
-        usuNick = await Usuario.findOne({where: {
-            nick: usu.nick
-        }})
-        if(usuEmail.length > 0){
+        usuEmail = await Usuario.findOne({where: { email: usu.email }})
+        usuNick = await Usuario.findOne({where: { nick: usu.nick }})
+        if(usuEmail != null){
             resp.status(400)
             resp.send({
                 code:2,
                 message: "Ya existe un usuario con ese email."
             })
         }
-        else if(usuNick.length > 0){
+        else if(usuNick != null){
             resp.status(400)
             resp.send({
                 code:2,
@@ -167,7 +176,7 @@ app.post('/usuarios', async function(req,resp){
                     nombre: usu.nombre,
                     email: usu.email,
                     nick: usu.nick,
-                    password: usu.password
+                    password: passwordHash.generate(usu.password)
                 });
                   
                 resp.setHeader('Location', 'http://localhost:3000/usuarios/' + creado.id)
@@ -185,6 +194,120 @@ app.post('/usuarios', async function(req,resp){
             code:1,
             message: "Faltan datos"
         })
+    }
+})
+
+//2. login
+app.post('/login', async function(pet,resp) {
+    usu = pet.body
+    if(usu.email && usu.password){
+        usuEmail = await Usuario.findOne({where: { email: usu.email }})
+        console.log(usuEmail)
+        if(usuEmail != null){
+            if(passwordHash.verify(usu.password, usuEmail.password)){ //comprobar que usuEmail sea lista
+                payload = {
+                    idToken: usuEmail.id,
+                }
+                resp.status(200)
+                resp.send({
+                    jwt: jwt.sign(payload, secret, {expiresIn}),
+                    id: usuEmail.id,
+                })
+            }
+            else{
+                resp.status(400)
+                resp.send({
+                    code:1,
+                    message: "Contraseña incorrecta."
+                })
+            }
+        }
+        else{
+            resp.status(400)
+            resp.send({
+                code:2,
+                message: "No existe un usuario con ese email."
+            })
+        }
+    }
+    else{
+        resp.status(400)
+        resp.send({
+            code:1,
+            message: "Faltan datos"
+        })
+    }
+})
+
+app.put('/usuarios/:id',async function(pet,resp) {
+    idParam = parseInt(pet.params.id)
+    if(isNaN(idParam)){
+        resp.status(400)
+        resp.send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+    else{
+        item = await Usuario.findOne({where: { id: idParam }})
+        if(!item){
+            resp.status(404)
+            resp.send({
+                code:3,
+                message: "El dato no existe"
+            })
+        }
+        else{
+            const authHeader = pet.headers["authorization"]
+            var retCode;
+            if(!authHeader){
+                retCode = {code: 4, msg:"No autorizado"};
+            }
+            else{
+                retCode = verificarToken(authHeader.split(' ')[1], idParam)
+            }
+            if(retCode.code != 0){
+                resp.status(401)
+                resp.send({
+                    code:retCode.code,
+                    message: retCode.msg
+                })
+            }
+            else{
+                usu = pet.body
+                if(usu.email && usu.password && usu.nick){
+                    usuEmail = await Usuario.findOne({where: { email: usu.email }})
+                    usuNick = await Usuario.findOne({where: { nick: usu.nick }})
+                    if(usuEmail != null){
+                        resp.status(400)
+                        resp.send({
+                            code:2,
+                            message: "Ya existe un usuario con ese email."
+                        })
+                    }
+                    else if(usuNick != null){
+                        resp.status(400)
+                        resp.send({
+                            code:2,
+                            message: "Ya existe un usuario con ese nick."
+                        })
+                    }
+                    else{
+                        await Usuario.update({email: usu.email, password: passwordHash.generate(usu.password), nombre: usu.nombre, nick: usu.nick}, {where: { id: idParam }})
+                        resp.setHeader('Location', 'http://localhost:3000/usuarios/' + idParam)
+                        resp.status(201)
+                        resp.send(await Usuario.findOne({where: { email: usu.email }}))
+                    }
+                }
+                else{
+                    resp.status(400)
+                    resp.send({
+                        code:1,
+                        message: "Faltan datos"
+                    })
+                }
+            }
+        }
     }
 })
 
@@ -213,13 +336,29 @@ app.get('/usuarios/:id',async function(pet,resp) {
     }
 })
 
-async function setupRabbitMQ() {
-    var connection = await amqp.connect('amqp://rabbitmq');
-    channel = await connection.createChannel(); //variable global para poder usar la cola en los diferentes endpoints
-    await channel.assertQueue(queue, { durable: true });
-}
+app.post('/usuarios/:id/video', upload.single('video'), async function(req, res){
+    await channel.sendToQueue(queue, Buffer.from(req.params.id + path.extname(req.file.originalname))); //pongo el nombre del archivo en la cola
+    res.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
+})
+
+app.get('/usuarios/:id/video', async function(req, res){
+    const videoPath = path.join('/mnt/volumen/procesados', req.params.id + '.mp4');
+    fs.access(videoPath, fs.constants.F_OK, (err) => {
+        if (err) {
+            res.status(404).json({ error: 'Video no encontrado.' });
+        } else {
+            res.sendFile(videoPath);
+        }
+    });
+})
+
+// async function setupRabbitMQ() {
+//     var connection = await amqp.connect('amqp://rabbitmq');
+//     channel = await connection.createChannel(); //variable global para poder usar la cola en los diferentes endpoints
+//     await channel.assertQueue(queue, { durable: true });
+// }
 
 app.listen(3000, function(){
-    setupRabbitMQ();
+    //setupRabbitMQ();
     console.log('Cola creada. Servidor arrancado')
 })

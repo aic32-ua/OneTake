@@ -3,6 +3,7 @@ services:
   api:
     build: ./API
     command: ["./wait-for-it.sh", "rabbitmq:5672", "--", "npm", "start"]
+    #command: ["npm", "start"]
     ports:
       - "3000:3000"
     volumes:
