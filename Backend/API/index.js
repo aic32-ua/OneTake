@@ -152,7 +152,7 @@ function verificarToken(token, id){
 
 //1. registro
 app.post('/usuarios', async function(req,resp){
-    usu = req.body
+    var usu = req.body
     if(usu.nombre && usu.email && usu.password && usu.nick){
         usuEmail = await Usuario.findOne({where: { email: usu.email }})
         usuNick = await Usuario.findOne({where: { nick: usu.nick }})
@@ -199,7 +199,7 @@ app.post('/usuarios', async function(req,resp){
 
 //2. login
 app.post('/login', async function(pet,resp) {
-    usu = pet.body
+    var usu = pet.body
     if(usu.email && usu.password){
         usuEmail = await Usuario.findOne({where: { email: usu.email }})
         console.log(usuEmail)
@@ -239,8 +239,9 @@ app.post('/login', async function(pet,resp) {
     }
 })
 
+//3. actualizar datos usuario
 app.put('/usuarios/:id',async function(pet,resp) {
-    idParam = parseInt(pet.params.id)
+    var idParam = parseInt(pet.params.id)
     if(isNaN(idParam)){
         resp.status(400)
         resp.send({
@@ -249,7 +250,7 @@ app.put('/usuarios/:id',async function(pet,resp) {
         })
     }
     else{
-        item = await Usuario.findOne({where: { id: idParam }})
+        item = await Usuario.findByPk(idParam)
         if(!item){
             resp.status(404)
             resp.send({
@@ -306,6 +307,49 @@ app.put('/usuarios/:id',async function(pet,resp) {
                         message: "Faltan datos"
                     })
                 }
+            }
+        }
+    }
+})
+
+app.delete('/usuarios/:id',async function(pet,resp) {
+    var idParam = parseInt(pet.params.id)
+    if(isNaN(idParam)){
+        resp.status(400)
+        resp.send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+    else{
+        item = await Usuario.findByPk(idParam)
+        if(!item){
+            resp.status(404)
+            resp.send({
+                code:3,
+                message: "El dato no existe"
+            })
+        }
+        else{
+            const authHeader = pet.headers["authorization"]
+            if(!authHeader){
+                retCode = {code: 4, msg:"No autorizado"};
+            }
+            else{
+                token = authHeader.split(' ')[1] //quito el bearer
+                retCode = verificarToken(token, idParam)
+            }
+            if(retCode.code != 0){
+                resp.status(401)
+                resp.send({
+                    code:retCode.code,
+                    message: retCode.msg
+                })
+            }
+            else{
+                await Usuario.destroy({where: { id: idParam }})
+                resp.status(204)
+                resp.send()
             }
         }
     }
