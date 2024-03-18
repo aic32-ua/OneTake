@@ -1,18 +1,18 @@
-var express = require('express')
-var app = express()
+let express = require('express')
+let app = express()
 
 const cors = require('cors');
 app.use(cors());
 
-var bp = require('body-parser')
+let bp = require('body-parser')
 app.use(bp.json())
 
-var passwordHash = require('password-hash');
+let passwordHash = require('password-hash');
 
-var jwt = require('jsonwebtoken');
+let jwt = require('jsonwebtoken');
 
-var secret = "123456";
-var expiresIn = 3600; //1 hora
+const secret = "123456";
+const expiresIn = 3600; //1 hora
 
 const path = require('path');
 const fs = require('fs');
@@ -40,7 +40,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-const { Sequelize, DataTypes} = require('sequelize');
+const { Sequelize, DataTypes, Op} = require('sequelize');
 
 const sequelize = new Sequelize('OneTake', 'user', '1234', {
   host: 'mysql',
@@ -58,19 +58,23 @@ const Usuario = sequelize.define('USUARIO', {
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     nick: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     password: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    video: {
+        type: DataTypes.BOOLEAN
     }
 }, {
     tableName: 'USUARIO',
-    timestamps: false
 });
 
 const PeticionAmistad = sequelize.define('PETICION_AMISTAD', {
@@ -79,7 +83,7 @@ const PeticionAmistad = sequelize.define('PETICION_AMISTAD', {
       primaryKey: true,
       autoIncrement: true
     },
-    id_enviador: {
+    id_emisor: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
@@ -97,7 +101,6 @@ const PeticionAmistad = sequelize.define('PETICION_AMISTAD', {
     }
 }, {
     tableName: 'PETICION_AMISTAD',
-    timestamps: false
 });
 
 const RelacionAmistad = sequelize.define('RELACION_AMISTAD', {
@@ -124,14 +127,11 @@ const RelacionAmistad = sequelize.define('RELACION_AMISTAD', {
     }
 }, {
     tableName: 'RELACION_AMISTAD',
-    timestamps: false
 });
 
-function verificarToken(token, id){
+function verificarToken(token, id){ //anadir que aqui se compruebe que el usuario con ese id existe para simplificar los endpoints
     try{
-
         const decoded = jwt.verify(token,secret)
-
         if(!decoded || !decoded.idToken){
             return {code: 1, msg: "Token invalido"};
         }
@@ -150,234 +150,588 @@ function verificarToken(token, id){
     }
 }
 
-//1. registro
-app.post('/usuarios', async function(req,resp){
-    var usu = req.body
-    if(usu.nombre && usu.email && usu.password && usu.nick){
-        usuEmail = await Usuario.findOne({where: { email: usu.email }})
-        usuNick = await Usuario.findOne({where: { nick: usu.nick }})
-        if(usuEmail != null){
-            resp.status(400)
-            resp.send({
-                code:2,
-                message: "Ya existe un usuario con ese email."
-            })
+async function verificarTokenAmigo(token, id){ //un usuario amigo tambien esta autorizado para algunas opciones
+    try{
+        const decoded = jwt.verify(token,secret)
+        if(!decoded || !decoded.idToken){
+            return {code: 1, msg: "Token invalido"};
         }
-        else if(usuNick != null){
-            resp.status(400)
-            resp.send({
-                code:2,
-                message: "Ya existe un usuario con ese nick."
-            })
+        else if(decoded.idToken != id){
+            let item = await Usuario.findByPk(decoded.idToken)
+            if(!item){
+                return {code: 4, msg: "No autorizado"}; //si llega un token valido pero de un usuario que ya no existe (seria raro pero por si acaso)
+            }
+            if(await RelacionAmistad.findOne({where : {
+                [Op.or]: [
+                    { id_usuario1: id, id_usuario2: decoded.idToken },
+                    { id_usuario1: decoded.idToken, id_usuario2: id }
+                ]
+            }}))
+
+            return {code: 4, msg:"No autorizado"};
         }
         else{
-            try{
-                var creado = await Usuario.create({
-                    nombre: usu.nombre,
-                    email: usu.email,
-                    nick: usu.nick,
-                    password: passwordHash.generate(usu.password)
-                });
-                  
-                resp.setHeader('Location', 'http://localhost:3000/usuarios/' + creado.id)
-                resp.status(201)
-                resp.send(creado)
-            }
-            catch(error){
-                console.log(error)
-            }
+            return {code: 0}
         }
     }
-    else{
-        resp.status(400)
-        resp.send({
+    catch(Exception){
+        if (Exception instanceof jwt.TokenExpiredError) {
+            return {code: 5, msg:"Token expirado"};
+        }
+        return {code: 1, msg: "Token invalido"};
+    }
+}
+
+//1. registro
+app.post('/usuarios', async function(req,resp){
+    let usu = req.body
+    if(!(usu.nombre && usu.email && usu.password && usu.nick)){
+        return resp.status(400).send({
             code:1,
             message: "Faltan datos"
         })
+    }
+    try{
+        let creado = await Usuario.create({
+            nombre: usu.nombre,
+            email: usu.email,
+            nick: usu.nick,
+            password: passwordHash.generate(usu.password)
+        });    
+        resp.setHeader('Location', 'http://localhost:3000/usuarios/' + creado.id)
+        resp.status(201).send(creado)
+    }
+    catch(error){
+        console.log(error)
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return resp.status(400).send({
+                code: 2,
+                message: `Ya existe un usuario con ese ${error.errors[0].path}.`
+            });
+        }
+        else{
+            console.log(error)
+            return resp.status(400).send({
+                code: 1,
+                message: `Error desconocido.`
+            });
+        }
     }
 })
 
 //2. login
-app.post('/login', async function(pet,resp) {
-    var usu = pet.body
-    if(usu.email && usu.password){
-        usuEmail = await Usuario.findOne({where: { email: usu.email }})
-        console.log(usuEmail)
-        if(usuEmail != null){
-            if(passwordHash.verify(usu.password, usuEmail.password)){ //comprobar que usuEmail sea lista
-                payload = {
-                    idToken: usuEmail.id,
-                }
-                resp.status(200)
-                resp.send({
-                    jwt: jwt.sign(payload, secret, {expiresIn}),
-                    id: usuEmail.id,
-                })
-            }
-            else{
-                resp.status(400)
-                resp.send({
-                    code:1,
-                    message: "Contraseña incorrecta."
-                })
-            }
-        }
-        else{
-            resp.status(400)
-            resp.send({
-                code:2,
-                message: "No existe un usuario con ese email."
-            })
-        }
-    }
-    else{
-        resp.status(400)
-        resp.send({
+app.post('/login', async function(req,resp) {
+    let usu = req.body
+    if(!(usu.email && usu.password)){
+        return resp.status(400).send({
             code:1,
             message: "Faltan datos"
         })
     }
+
+    let usuEmail = await Usuario.findOne({where: { email: usu.email }})
+    if(usuEmail==null){
+        return resp.status(400).send({
+            code:2,
+            message: "No existe un usuario con ese email."
+        })
+    }
+    
+    if(!(passwordHash.verify(usu.password, usuEmail.password))){ //comprobar que usuEmail sea lista
+        return resp.status(400).send({
+            code:1,
+            message: "Contraseña incorrecta."
+        })
+    }
+
+    let payload = {
+        idToken: usuEmail.id,
+    }
+    resp.status(200).send({
+        jwt: jwt.sign(payload, secret, {expiresIn}),
+        id: usuEmail.id,
+    })
 })
 
 //3. actualizar datos usuario
-app.put('/usuarios/:id',async function(pet,resp) {
-    var idParam = parseInt(pet.params.id)
+app.put('/usuarios/:id',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
     if(isNaN(idParam)){
-        resp.status(400)
-        resp.send({
+        return resp.status(400).send({
             code:1,
             message: "El parametro id debe ser un numero"
         })
     }
+
+    let usu = req.body
+    if(!(usu.email && usu.password && usu.nick)){
+        return resp.status(400).send({
+            code:1,
+            message: "Faltan datos"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    let retCode;
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
     else{
-        item = await Usuario.findByPk(idParam)
-        if(!item){
-            resp.status(404)
-            resp.send({
-                code:3,
-                message: "El dato no existe"
-            })
+        retCode = verificarToken(authHeader.split(' ')[1], idParam)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    let item = await Usuario.findByPk(idParam)
+    if(!item){
+        return resp.status(404).send({
+            code:3,
+            message: "El dato no existe"
+        })
+    }
+
+    try{
+        await Usuario.update({email: usu.email, password: passwordHash.generate(usu.password), nombre: usu.nombre, nick: usu.nick}, {where: { id: idParam }})
+        resp.setHeader('Location', 'http://localhost:3000/usuarios/' + idParam)
+        resp.status(201).send(await Usuario.findOne({where: { email: usu.email }}))
+    }
+    catch(error){
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            console.log(error)
+            return resp.status(400).send({
+                code: 2,
+                message: `Ya existe un usuario con ese ${error.errors[0].path}.`
+            });
         }
         else{
-            const authHeader = pet.headers["authorization"]
-            var retCode;
-            if(!authHeader){
-                retCode = {code: 4, msg:"No autorizado"};
-            }
-            else{
-                retCode = verificarToken(authHeader.split(' ')[1], idParam)
-            }
-            if(retCode.code != 0){
-                resp.status(401)
-                resp.send({
-                    code:retCode.code,
-                    message: retCode.msg
-                })
-            }
-            else{
-                usu = pet.body
-                if(usu.email && usu.password && usu.nick){
-                    usuEmail = await Usuario.findOne({where: { email: usu.email }})
-                    usuNick = await Usuario.findOne({where: { nick: usu.nick }})
-                    if(usuEmail != null){
-                        resp.status(400)
-                        resp.send({
-                            code:2,
-                            message: "Ya existe un usuario con ese email."
-                        })
-                    }
-                    else if(usuNick != null){
-                        resp.status(400)
-                        resp.send({
-                            code:2,
-                            message: "Ya existe un usuario con ese nick."
-                        })
-                    }
-                    else{
-                        await Usuario.update({email: usu.email, password: passwordHash.generate(usu.password), nombre: usu.nombre, nick: usu.nick}, {where: { id: idParam }})
-                        resp.setHeader('Location', 'http://localhost:3000/usuarios/' + idParam)
-                        resp.status(201)
-                        resp.send(await Usuario.findOne({where: { email: usu.email }}))
-                    }
-                }
-                else{
-                    resp.status(400)
-                    resp.send({
-                        code:1,
-                        message: "Faltan datos"
-                    })
-                }
-            }
+            console.log(error)
+            return resp.status(400).send({
+                code: 1,
+                message: `Error desconocido.`
+            });
         }
     }
 })
 
-app.delete('/usuarios/:id',async function(pet,resp) {
-    var idParam = parseInt(pet.params.id)
+//4. borrar cuenta
+app.delete('/usuarios/:id',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
     if(isNaN(idParam)){
-        resp.status(400)
-        resp.send({
+        return resp.status(400).send({
             code:1,
             message: "El parametro id debe ser un numero"
         })
     }
-    else{
-        item = await Usuario.findByPk(idParam)
-        if(!item){
-            resp.status(404)
-            resp.send({
-                code:3,
-                message: "El dato no existe"
-            })
-        }
-        else{
-            const authHeader = pet.headers["authorization"]
-            if(!authHeader){
-                retCode = {code: 4, msg:"No autorizado"};
-            }
-            else{
-                token = authHeader.split(' ')[1] //quito el bearer
-                retCode = verificarToken(token, idParam)
-            }
-            if(retCode.code != 0){
-                resp.status(401)
-                resp.send({
-                    code:retCode.code,
-                    message: retCode.msg
-                })
-            }
-            else{
-                await Usuario.destroy({where: { id: idParam }})
-                resp.status(204)
-                resp.send()
-            }
-        }
+
+    let item = await Usuario.findByPk(idParam)
+    if(!item){
+        return resp.status(404).send({
+            code:3,
+            message: "El dato no existe"
+        })
     }
+
+    const authHeader = req.headers["authorization"]
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        token = authHeader.split(' ')[1] //quito el bearer
+        retCode = verificarToken(token, idParam)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    await Usuario.destroy({where: { id: idParam }})
+    resp.status(204).send()
+    
 })
 
-app.get('/usuarios/:id',async function(pet,resp) {
-    id = parseInt(pet.params.id)
+//5. obtener informacion usuario
+app.get('/usuarios/:id',async function(req,resp) {
+    let id = parseInt(req.params.id)
     if(isNaN(id)){
-        resp.status(400)
-        resp.send({
+        return resp.status(400).send({
             code:1,
             message: "El parametro id debe ser un numero"
         })
     }
-    else{
-        item = await Usuario.findByPk(id)
-        if(!item){
-            resp.status(404)
-            resp.send({
-                code:3,
-                message: "El dato no existe"
-            })
-        }
-        else{
-            resp.status(200)
-            resp.send(item)
-        }
+
+    let item = await Usuario.findByPk(id, {attributes: ['nombre', 'email', 'nick', 'video']})
+    if(!item){
+        return resp.status(404).send({
+            code:3,
+            message: "El dato no existe"
+        })
     }
+
+    resp.status(200).send({nombre: item.nombre, email: item.email, nick: item.nick})
+})
+
+//6. buscar usuario por nick paginacion?
+app.get('/usuarios/buscar/:nick',async function(req,resp) {
+    let nickParam = req.params.nick
+    resp.status(200)
+    resp.send(await Usuario.findAll({where: {nick: { [Sequelize.Op.like]: '%' + nickParam + '%' }}}))
+})
+
+//8. Enviar peticion amistad
+app.post('/usuarios/:idEmisor/peticiones/:idReceptor',async function(req,resp) {
+    let idEmisor = parseInt(req.params.idEmisor)
+    let idReceptor = parseInt(req.params.idReceptor)
+    if(isNaN(idEmisor) || isNaN(idReceptor)){
+        return resp.status(400).send({
+            code:1,
+            message: "Los parametro id deben ser un numero"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    let retCode;
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        retCode = verificarToken(authHeader.split(' ')[1], idEmisor)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    let emisor = await Usuario.findByPk(idEmisor)
+    let receptor = await Usuario.findByPk(idReceptor)
+    if(!emisor || !receptor){
+        return resp.status(404).send({
+            code:3,
+            message: "Emisor o receptor incorrecto"
+        })
+    }
+
+    try{
+        let peticion = await PeticionAmistad.create({
+            id_emisor : idEmisor,
+            id_receptor : idReceptor
+        })
+        resp.status(201).send(peticion)
+    }
+    catch(error){
+        console.log(error)
+        return resp.status(400).send({
+            code: 1,
+            message: `Error desconocido.`
+        });
+    }
+
+})
+
+//9. Ver listado peticiones amistad usuario
+app.get('/usuarios/:id/peticiones',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
+    if(isNaN(idParam)){
+        return resp.status(400).send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    let retCode;
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        retCode = verificarToken(authHeader.split(' ')[1], idParam)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    let user = await Usuario.findByPk(idParam)
+    if(!user){
+        return resp.status(404).send({
+            code:3,
+            message: "El usuario no existe"
+        })
+    }
+
+    resp.status(200).send(await PeticionAmistad.findAll({where: { id_receptor: idParam }}))
+})
+
+//10. Aceptar peticion amistad
+app.delete('/peticiones/:id/aceptar',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
+    if(isNaN(idParam)){
+        return resp.status(400).send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+
+    let item = await PeticionAmistad.findByPk(idParam)
+    if(!item){
+        return resp.status(404).send({
+            code:3,
+            message: "El dato no existe"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        token = authHeader.split(' ')[1] //quito el bearer
+        retCode = verificarToken(token, item.id_receptor)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    await RelacionAmistad.create({
+        id_usuario1: item.id_emisor,
+        id_usuario2: item.id_receptor
+    })
+    await PeticionAmistad.destroy({where: { id: idParam }})
+    resp.status(204).send()
+    
+})
+
+//11. Rechazar peticion amistad
+app.delete('/peticiones/:id/rechazar',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
+    if(isNaN(idParam)){
+        return resp.status(400).send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+
+    let item = await PeticionAmistad.findByPk(idParam)
+    if(!item){
+        return resp.status(404).send({
+            code:3,
+            message: "El dato no existe"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        token = authHeader.split(' ')[1] //quito el bearer
+        retCode = verificarToken(token, item.id_receptor)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    await PeticionAmistad.destroy({where: { id: idParam }})
+    resp.status(204).send()
+    
+})
+
+//12. Ver listado amigos
+app.get('/usuarios/:id/amigos',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
+    if(isNaN(idParam)){
+        return resp.status(400).send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    let retCode;
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        retCode = verificarToken(authHeader.split(' ')[1], idParam)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    try {
+        const relaciones = await RelacionAmistad.findAll({
+            where: {
+                [Op.or]: [
+                    { id_usuario1: idParam },
+                    { id_usuario2: idParam }
+                ]
+            }
+        });
+
+        const idsAmigos = relaciones.map(relacion => {
+            if (relacion.id_usuario1 === idParam) {
+                return relacion.id_usuario2;
+            } else {
+                return relacion.id_usuario1;
+            }
+        });
+
+        const amigos = await Usuario.findAll({ where: { id: idsAmigos }, attributes: ['nombre', 'email', 'nick', 'video']});
+
+        resp.status(200).send(amigos);
+    } catch (error) {
+        console.error("Error al obtener amigos:", error);
+        resp.status(500).send({
+            code: 500,
+            message: "Error interno del servidor"
+        });
+    }
+})
+
+//13. Ver video usuario
+app.get('/usuarios/:id/video',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
+    if(isNaN(idParam)){
+        return resp.status(400).send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    let retCode;
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        retCode = verificarTokenAmigo(authHeader.split(' ')[1], idParam)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    let user = await Usuario.findByPk(idParam)
+    if(!user){
+        return resp.status(404).send({
+            code:3,
+            message: "El usuario no existe"
+        })
+    }
+
+    if(user.video == false){
+        return resp.status(404).send({
+            code:3,
+            message: "El video no existe"
+        })
+    }
+
+    const videoPath = path.join('/mnt/volumen/procesados', idParam + '.mp4');
+    fs.access(videoPath, fs.constants.F_OK, (err) => {
+        if (err) {
+            return resp.status(404).send({
+                code:3,
+                message: "El video no existe"
+            })
+        } else {
+            res.sendFile(videoPath);
+        }
+    });
+})
+
+//14. Publicar video
+app.patch('/usuarios/:id/video',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
+    if(isNaN(idParam)){
+        return resp.status(400).send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+
+    let user = await Usuario.findByPk(idParam)
+    if(!user){
+        return resp.status(404).send({
+            code:3,
+            message: "El usuario no existe"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    let retCode;
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        retCode = verificarToken(authHeader.split(' ')[1], idParam)
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    await channel.sendToQueue(queue, Buffer.from(idParam + path.extname(req.file.originalname))); //pongo el nombre del archivo en la cola
+    res.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
+})
+
+//dev endpoint
+app.get('/usuarioCompleto/:id',async function(req,resp) {
+    id = parseInt(req.params.id)
+    if(isNaN(id)){
+        return resp.status(400).send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+
+    item = await Usuario.findByPk(id)
+    if(!item){
+        return resp.status(404).send({
+            code:3,
+            message: "El dato no existe"
+        })
+    }
+
+    resp.status(200)
+    resp.send(item)
+})
+
+//dev endpoint
+app.get('/usuariosCompleto/',async function(req,resp) {
+    resp.status(200)
+    resp.send(await Usuario.findAll())
+})
+
+app.get('/peticiones',async function(req,resp) {
+    resp.status(200)
+    resp.send(await PeticionAmistad.findAll())
+})
+
+app.get('/amistad',async function(req,resp) {
+    resp.status(200)
+    resp.send(await RelacionAmistad.findAll())
 })
 
 app.post('/usuarios/:id/video', upload.single('video'), async function(req, res){
@@ -396,13 +750,13 @@ app.get('/usuarios/:id/video', async function(req, res){
     });
 })
 
-// async function setupRabbitMQ() {
-//     var connection = await amqp.connect('amqp://rabbitmq');
-//     channel = await connection.createChannel(); //variable global para poder usar la cola en los diferentes endpoints
-//     await channel.assertQueue(queue, { durable: true });
-// }
+async function setupRabbitMQ() {
+    let connection = await amqp.connect('amqp://rabbitmq');
+    channel = await connection.createChannel(); //variable global para poder usar la cola en los diferentes endpoints
+    await channel.assertQueue(queue, { durable: true });
+}
 
 app.listen(3000, function(){
-    //setupRabbitMQ();
+    setupRabbitMQ();
     console.log('Cola creada. Servidor arrancado')
 })
