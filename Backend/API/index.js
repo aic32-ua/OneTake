@@ -150,7 +150,7 @@ function verificarToken(token, id){ //anadir que aqui se compruebe que el usuari
     }
 }
 
-async function verificarTokenAmigo(token, id){ //un usuario amigo tambien esta autorizado para algunas opciones
+async function verificarTokenAmigo(token, id){ //un usuario amigo tambien esta autorizado para algunas acciones
     try{
         const decoded = jwt.verify(token,secret)
         if(!decoded || !decoded.idToken){
@@ -166,7 +166,9 @@ async function verificarTokenAmigo(token, id){ //un usuario amigo tambien esta a
                     { id_usuario1: id, id_usuario2: decoded.idToken },
                     { id_usuario1: decoded.idToken, id_usuario2: id }
                 ]
-            }}))
+            }})){
+                return {code: 0}
+            }
 
             return {code: 4, msg:"No autorizado"};
         }
@@ -297,7 +299,7 @@ app.put('/usuarios/:id',async function(req,resp) {
     try{
         await Usuario.update({email: usu.email, password: passwordHash.generate(usu.password), nombre: usu.nombre, nick: usu.nick}, {where: { id: idParam }})
         resp.setHeader('Location', 'http://localhost:3000/usuarios/' + idParam)
-        resp.status(201).send(await Usuario.findOne({where: { email: usu.email }}))
+        resp.status(200).send(await Usuario.findOne({where: { email: usu.email }}))
     }
     catch(error){
         if (error.name === 'SequelizeUniqueConstraintError') {
@@ -615,14 +617,13 @@ app.get('/usuarios/:id/video',async function(req,resp) {
             message: "El parametro id debe ser un numero"
         })
     }
-
     const authHeader = req.headers["authorization"]
     let retCode;
     if(!authHeader){
         retCode = {code: 4, msg:"No autorizado"};
     }
     else{
-        retCode = verificarTokenAmigo(authHeader.split(' ')[1], idParam)
+        retCode = await verificarTokenAmigo(authHeader.split(' ')[1], idParam)
     }
     if(retCode.code != 0){
         return resp.status(401).send({
@@ -654,13 +655,13 @@ app.get('/usuarios/:id/video',async function(req,resp) {
                 message: "El video no existe"
             })
         } else {
-            res.sendFile(videoPath);
+            resp.sendFile(videoPath);
         }
     });
 })
 
 //14. Publicar video
-app.patch('/usuarios/:id/video',async function(req,resp) {
+app.patch('/usuarios/:id/video', upload.single('video'), async function(req,resp) {
     let idParam = parseInt(req.params.id)
     if(isNaN(idParam)){
         return resp.status(400).send({
@@ -674,6 +675,13 @@ app.patch('/usuarios/:id/video',async function(req,resp) {
         return resp.status(404).send({
             code:3,
             message: "El usuario no existe"
+        })
+    }
+
+    if(!req.file){
+        return resp.status(400).send({
+            code:1,
+            message: "Archivo incorrecto"
         })
     }
 
@@ -693,7 +701,8 @@ app.patch('/usuarios/:id/video',async function(req,resp) {
     }
 
     await channel.sendToQueue(queue, Buffer.from(idParam + path.extname(req.file.originalname))); //pongo el nombre del archivo en la cola
-    res.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
+    await Usuario.update({video: true}, {where: { id: idParam }})
+    resp.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
 })
 
 //dev endpoint
@@ -739,7 +748,7 @@ app.post('/usuarios/:id/video', upload.single('video'), async function(req, res)
     res.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
 })
 
-app.get('/usuarios/:id/video', async function(req, res){
+app.get('/usuarios/:id/videoX', async function(req, res){
     const videoPath = path.join('/mnt/volumen/procesados', req.params.id + '.mp4');
     fs.access(videoPath, fs.constants.F_OK, (err) => {
         if (err) {
