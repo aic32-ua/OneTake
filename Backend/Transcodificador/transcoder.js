@@ -6,14 +6,14 @@ const queue = 'OneTakeQueue';
 
 async function setupRabbitMQ() {
     var connection = await amqp.connect('amqp://rabbitmq');
-    channel = await connection.createChannel(); //variable global para poder usar la cola en los diferentes endpoints
+    channel = await connection.createChannel();
     await channel.assertQueue(queue, { durable: true });
 }
 
 function transcodificar(nombre) {
     const origen = `/mnt/volumen/brutos/${nombre}`;
     const destino = `/mnt/volumen/procesados/${path.parse(nombre).name}.mp4`;
-    const comando = `ffmpeg -i ${origen} -c:v libx264 ${destino}`;
+    const comando = `ffmpeg -y -i ${origen} -c:v libx264 ${destino}`; // con -y si el video existe lo sobreescribe
 
     return new Promise((resolve, reject) => {
         exec(comando, (error, stdout, stderr) => {
