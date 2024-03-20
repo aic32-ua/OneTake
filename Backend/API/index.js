@@ -129,6 +129,24 @@ const RelacionAmistad = sequelize.define('RELACION_AMISTAD', {
     tableName: 'RELACION_AMISTAD',
 });
 
+function obtenerIdToken(token){ //algunos metodos estan disponibles para todos los usuarios pero se necesita identificar quien esta accediendo
+    try{
+        const decoded = jwt.verify(token,secret)
+        if(!decoded){
+            return {code: 1, msg: "Token invalido"};
+        }
+        else{
+            return {code: 0, id:decoded.idToken};
+        }
+    }
+    catch(Exception){
+        if (Exception instanceof jwt.TokenExpiredError) {
+            return {code: 5, msg:"Token expirado"};
+        }
+        return {code: 1, msg: "Token invalido"};
+    }
+}
+
 function verificarToken(token, id){ //anadir que aqui se compruebe que el usuario con ese id existe para simplificar los endpoints
     try{
         const decoded = jwt.verify(token,secret)
@@ -380,9 +398,38 @@ app.get('/usuarios/:id',async function(req,resp) {
 
 //6. buscar usuario por nick paginacion?
 app.get('/usuarios/buscar/:nick',async function(req,resp) {
+
+    const authHeader = req.headers["authorization"]
+    let retCode;
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        retCode = obtenerIdToken(authHeader.split(' ')[1])
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
     let nickParam = req.params.nick
+    let usuarios = await Usuario.findAll({where: {nick: { [Sequelize.Op.like]: '%' + nickParam + '%' }}});
+    const userId = retCode.id;
+
+    for (const usuario of usuarios) {
+        const peticion = await PeticionAmistad.findOne({
+            where: {
+                id_emisor: userId,
+                id_receptor: usuario.id
+            }
+        });
+        usuario.dataValues.peticion = peticion !== null;
+    }
+
     resp.status(200)
-    resp.send(await Usuario.findAll({where: {nick: { [Sequelize.Op.like]: '%' + nickParam + '%' }}}))
+    resp.send(usuarios)
 })
 
 //8. Enviar peticion amistad
@@ -608,7 +655,48 @@ app.get('/usuarios/:id/amigos',async function(req,resp) {
     }
 })
 
-//13. Ver video usuario
+//13. Eliminar relacion amistad
+app.delete('/amistad/:id',async function(req,resp) {
+    let idParam = parseInt(req.params.id)
+    if(isNaN(idParam)){
+        return resp.status(400).send({
+            code:1,
+            message: "El parametro id debe ser un numero"
+        })
+    }
+
+    let item = await RelacionAmistad.findByPk(idParam)
+    if(!item){
+        return resp.status(404).send({
+            code:3,
+            message: "El dato no existe"
+        })
+    }
+
+    const authHeader = req.headers["authorization"]
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        token = authHeader.split(' ')[1] //quito el bearer
+        retCode = verificarToken(token, item.id_usuario1) //cualquiera de los dos usuarios en una relacion de amistad puede romperla
+        if(retCode.code!=0){
+            retCode = verificarToken(token, item.id_usuario2)
+        }
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+
+    await RelacionAmistad.destroy({where: { id: idParam }})
+    resp.status(204).send()
+    
+})
+
+//14. Ver video usuario
 app.get('/usuarios/:id/video',async function(req,resp) {
     let idParam = parseInt(req.params.id)
     if(isNaN(idParam)){
@@ -660,7 +748,7 @@ app.get('/usuarios/:id/video',async function(req,resp) {
     });
 })
 
-//14. Publicar video
+//15. Publicar video
 app.patch('/usuarios/:id/video', upload.single('video'), async function(req,resp) {
     let idParam = parseInt(req.params.id)
     if(isNaN(idParam)){
