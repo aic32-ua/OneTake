@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router';
+import { createPinia } from 'pinia';
+import { useUsuarioLogeadoStore } from './stores/UsuarioLogeadoStore.js';
 
 import { IonicVue } from '@ionic/vue';
 
@@ -23,9 +25,28 @@ import '@ionic/vue/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 
+import { addIcons } from 'ionicons';
+import { homeSharp, personAdd, film } from 'ionicons/icons';
+
+addIcons({
+  'home-sharp': homeSharp,
+  'person-add': personAdd,
+  'film': film
+});
+
 const app = createApp(App)
   .use(IonicVue)
-  .use(router);
+  .use(router)
+  .use(createPinia())
+
+const userStore = useUsuarioLogeadoStore()
+
+if (localStorage.getItem('token')) {
+    userStore.token = localStorage.getItem('token');
+}
+if (localStorage.getItem('usuario')) {
+    userStore.usuario = localStorage.getItem('usuario');
+}
   
 router.isReady().then(() => {
   app.mount('#app');

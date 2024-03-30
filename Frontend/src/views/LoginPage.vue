@@ -1,17 +1,15 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>OneTake</ion-title>
-      </ion-toolbar>
-    </ion-header>
     <ion-content :fullscreen="true">
-      <VideoUpload />
+      <ion-header collapse="condense">
+      </ion-header>
+      <Login/>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
-import VideoUpload from '@/components/VideoUpload.vue';
+import Login from '@/components/Login.vue';
 </script>
+  

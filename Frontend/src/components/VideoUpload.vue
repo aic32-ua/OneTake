@@ -1,29 +1,31 @@
 <script>
-    import ClienteAPI from '../ClienteAPI.js'
-    export default{
-        data: function() {
-            return {
-                api: new ClienteAPI(),
-                videoFile: null
-            };
+import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
+import ClienteAPI from '../ClienteAPI.js'
+export default{
+    data: function() {
+        return {
+            api: new ClienteAPI(),
+            videoFile: null,
+            usuarioLogeadoStore: useUsuarioLogeadoStore()
+        };
+    },
+    methods: {
+        handleFileUpload(event) {
+            this.videoFile = event.target.files[0];
         },
-        methods: {
-            handleFileUpload(event) {
-                this.videoFile = event.target.files[0];
-            },
-            uploadVideo() {
-                if(this.videoFile != null){
-                    this.api.subirVideo(1, this.videoFile);
-                    this.videoFile = null;
-                }
-                else{
-                    alert("Por favor, seleccione un video para subir.");
-                    return;
-                }
-            
+        async uploadVideo() {
+            if(this.videoFile != null){
+                await this.api.subirVideo(this.usuarioLogeadoStore.idUsu, this.videoFile);
+                document.getElementById('video').value = '';
+                this.videoFile = null;
+            }
+            else{
+                alert("Por favor, seleccione un video para subir.");
+                return;
             }
         }
     }
+}
 </script>
 
 <template>

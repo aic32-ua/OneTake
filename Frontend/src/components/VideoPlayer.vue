@@ -22,7 +22,7 @@
       async loadVideo() {
         try {
           this.videoUrl = 'http://localhost:3000/usuarios/1/video';
-          this.$refs.videoPlayer.load(); // Recargar el reproductor de video después de actualizar la URL
+          this.$refs.videoPlayer.load();
         } catch (error) {
           console.error('Error al cargar el video:', error);
         }

@@ -9,7 +9,7 @@ class ClienteAPI {
             formData.append('video', video);
 
             const response = await fetch(url, {
-                method: 'POST',
+                method: 'PATCH',
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('token'),
                 },
@@ -17,7 +17,7 @@ class ClienteAPI {
             });
 
             if (!response.ok) {
-                throw new Error('Error al subir la foto de la serie');
+                throw new Error('Error al subir el video');
             }
 
             return await response.json();
@@ -29,6 +29,7 @@ class ClienteAPI {
 
     async registro(usuario) {
         try {
+            console.log(usuario)
             const url = `${this.baseURL}/usuarios`;
             const response = await fetch(url, {
                 method: 'POST',
@@ -37,10 +38,6 @@ class ClienteAPI {
                 },
                 body: JSON.stringify(usuario)
             });
-
-            if (!response.ok) {
-                throw new Error('Error al registrar usuario');
-            }
 
             return await response.json();
         } catch (error) {
@@ -59,10 +56,6 @@ class ClienteAPI {
                 },
                 body: JSON.stringify({ email, password })
             });
-
-            if (!response.ok) {
-                throw new Error('Error al iniciar sesión');
-            }
 
             return await response.json();
         } catch (error) {
@@ -240,6 +233,9 @@ class ClienteAPI {
                     'Authorization': 'Bearer ' + localStorage.getItem('token'),
                 },
             });
+
+            console.log(id)
+            console.log(response)
 
             if (!response.ok) {
                 throw new Error('Error al ver listado de amigos');
