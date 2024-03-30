@@ -1,8 +1,5 @@
 <template>
     <ion-page>
-      <ion-header>
-        Register
-      </ion-header>
       <ion-content :fullscreen="true">
         <ion-header collapse="condense">
         </ion-header>

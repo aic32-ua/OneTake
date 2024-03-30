@@ -32,96 +32,69 @@ export default{
 
 <template>
   <div class="page-container">
-
-    <h1 class="oneTake">OneTake</h1>
+    <h1 class="onetake">OneTake</h1>
     
     <div :class="{ 'login-form': true, 'error-shake': error }">
       <input type="text" placeholder="Nombre de usuario" v-model="email" required>
-      <br/>
       <input type="password" placeholder="Contraseña" v-model="password" required>
-      <br/>
       <button class="login-button center-button" @click="iniciarSesion">Entrar</button>
-    </div>
-  
-    <div class="error" v-if="error">
-      <p>{{error}}</p>
+
+      <div class="error" v-if="error">
+        <p>{{error}}</p>
+      </div>
     </div>
 
     <div class="registration-section">
-      <p class="color">
-        ¿Todavía no eres miembro?
-      </p>
+      <p class="color">¿Todavía no eres miembro?</p>
       <RouterLink to="/register" class="register-link">Registrarse</RouterLink>
     </div>
   </div>
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.5s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateX(100px);
-}
-
 .onetake {
-  color:#ffffff;
-  text-align:left;
-  vertical-align:text-top;
-  font-size:40px;
-  font-family:Rounded Mplus 1c Bold;
-  line-height:auto;
-  border-style:hidden;
-  outline:none;
-  width:164px;
+  color: #ffffff;
+  text-align: center;
+  font-size: 40px;
+  font-family: 'Rounded Mplus 1c Bold', sans-serif;
+  margin-bottom: 30px;
 }
 
 .page-container {
   text-align: center;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
+  height: 100vh;
   justify-content: center;
 }
 
-.color{
+.color {
   color: white;
 }
 
 .error {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #f8d7da; /* Color de fondo para indicar un error (puedes personalizarlo) */
-  border: 1px solid #dc3545; /* Borde rojo para resaltar el error */
-  color: #721c24; /* Color de texto oscuro para una mejor legibilidad */
-  border-radius: 5px; /* Bordes redondeados */
-  font-size: 14px; /* Tamaño de fuente */
+  margin-top: 20px;
+  background-color: #f8d7da;
+  border: 1px solid #dc3545;
+  color: #721c24;
+  border-radius: 5px;
+  font-size: 14px;
 }
 
 .login-form {
   margin: 0 auto;
-}
-
-label {
-  display: block;
-  margin-bottom: 12px;
+  width: 85%;
 }
 
 input {
-  width: 370px;
+  width: 100%;
   height: 40px;
-  width:95%;
-  border-radius:13px;
+  border-radius: 13px;
   padding: 8px;
   margin-bottom: 20px;
   box-sizing: border-box;
   font-size: 16px;
-  background-color:rgba(188, 188, 188, 0.25);
-  border-radius: 10px;
+  background-color: rgba(188, 188, 188, 0.25);
 }
 
 input::placeholder {
@@ -129,16 +102,15 @@ input::placeholder {
 }
 
 .login-button {
+  width: 100%;
+  height: 40px;
+  border-radius: 13px;
   padding: 8px 12px;
-  height: 37px;
-  width: 95%;
-  border-radius:13px;
   color: white;
   text-decoration: underline;
-  border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
-  background-color:rgba(0, 255, 25, 0.8199999928474426);
+  background-color: rgba(0, 255, 25, 0.82);
 }
 
 .center-button {
@@ -158,18 +130,6 @@ input::placeholder {
 
 .register-link:hover {
   text-decoration: underline;
-}
-
-.shake-enter-active, .shake-leave-active {
-  transition: transform 0.5s ease-in-out;
-}
-
-.shake-enter, .shake-leave-to /* .shake-leave-active in <2.1.8 */ {
-  transform: translateX(0);
-}
-
-.shake-leave, .shake-enter-to /* .shake-enter-active in <2.1.8 */ {
-  transform: translateX(-10px);
 }
 
 .error-shake {

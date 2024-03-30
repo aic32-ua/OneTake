@@ -53,9 +53,6 @@ const Usuario = sequelize.define('USUARIO', {
         primaryKey: true,
         autoIncrement: true
     },
-    nombre: {
-        type: DataTypes.STRING,
-    },
     email: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -205,7 +202,7 @@ async function verificarTokenAmigo(token, id){ //un usuario amigo tambien esta a
 //1. registro
 app.post('/usuarios', async function(req,resp){
     let usu = req.body
-    if(!(usu.nombre && usu.email && usu.password && usu.nick)){
+    if(!(usu.email && usu.password && usu.nick)){
         return resp.status(400).send({
             code:1,
             message: "Faltan datos"
@@ -213,7 +210,6 @@ app.post('/usuarios', async function(req,resp){
     }
     try{
         let creado = await Usuario.create({
-            nombre: usu.nombre,
             email: usu.email,
             nick: usu.nick,
             password: passwordHash.generate(usu.password)
@@ -766,7 +762,7 @@ app.patch('/usuarios/:id/video', upload.single('video'), async function(req,resp
         })
     }
 
-    if(!req.file){
+    if(!req.file || !req.file.originalname){
         return resp.status(400).send({
             code:1,
             message: "Archivo incorrecto"
