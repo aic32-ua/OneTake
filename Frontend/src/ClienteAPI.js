@@ -29,7 +29,6 @@ class ClienteAPI {
 
     async registro(usuario) {
         try {
-            console.log(usuario)
             const url = `${this.baseURL}/usuarios`;
             const response = await fetch(url, {
                 method: 'POST',
@@ -127,11 +126,12 @@ class ClienteAPI {
     async buscarUsuarioPorNick(nick) {
         try {
             const url = `${this.baseURL}/usuarios/buscar/${nick}`;
-            const response = await fetch(url);
-
-            if (!response.ok) {
-                throw new Error('Error al buscar usuario por nick');
-            }
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                },
+            });
 
             return await response.json();
         } catch (error) {
@@ -233,9 +233,6 @@ class ClienteAPI {
                     'Authorization': 'Bearer ' + localStorage.getItem('token'),
                 },
             });
-
-            console.log(id)
-            console.log(response)
 
             if (!response.ok) {
                 throw new Error('Error al ver listado de amigos');

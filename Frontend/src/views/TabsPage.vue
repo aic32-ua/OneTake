@@ -3,17 +3,17 @@
     <ion-tabs>
       <ion-router-outlet></ion-router-outlet>
       <ion-tab-bar slot="bottom">
-        <ion-tab-button tab="tab1" href="/tabs/tab1">
+        <ion-tab-button tab="home" href="/tabs/home">
           <ion-icon name="home-sharp" color="white"></ion-icon>
           <ion-label>Home</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="tab2" href="/tabs/tab2">
+        <ion-tab-button tab="publicar" href="/tabs/publicar">
           <ion-icon name="film"></ion-icon>
           <ion-label>Publicar</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="tab3" href="/tabs/tab3">
+        <ion-tab-button tab="social" href="/tabs/social">
           <ion-icon name="person-add"></ion-icon>
           <ion-label>Social</ion-label>
         </ion-tab-button>

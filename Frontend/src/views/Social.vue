@@ -10,20 +10,20 @@
       <ion-tabs>
         <ion-router-outlet></ion-router-outlet>
         <ion-tab-bar slot="top">
-          <ion-tab-button tab="tab1" href="/tabs3/tab1">
+          <ion-tab-button tab="buscar" href="/tabs/social/buscar">
             <ion-label>Buscar</ion-label>
           </ion-tab-button>
 
-          <ion-tab-button tab="tab2" href="/tabs3/tab2">
+          <ion-tab-button tab="peticiones" href="/tabs/social/peticiones">
             <ion-label>Peticiones</ion-label>
           </ion-tab-button>
 
-          <ion-tab-button tab="tab3" href="/tabs3/tab3">
+          <ion-tab-button tab="amigos" href="/tabs/social/amigos">
             <ion-label>Amigos</ion-label>
           </ion-tab-button>
 
-          <ion-tab-button tab="tab4" href="/tabs3/tab4">
-            <ion-label>Cuenta</ion-label>
+          <ion-tab-button tab="perfil" href="/tabs/social/perfil">
+            <ion-label>Perfil</ion-label>
           </ion-tab-button>
         </ion-tab-bar>
       </ion-tabs>

@@ -15,39 +15,39 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/tabs/tab1'
+        redirect: '/tabs/home'
       },
       {
-        path: 'tab1',
-        component: () => import('@/views/Tab1Page.vue')
+        path: 'home',
+        component: () => import('@/views/Home.vue')
       },
       {
-        path: 'tab2',
-        component: () => import('@/views/Tab2Page.vue')
+        path: 'publicar',
+        component: () => import('@/views/Publicar.vue')
       },
       {
-        path: 'tab3',
-        component: () => import('@/views/Tab3Page.vue'),
+        path: 'social',
+        component: () => import('@/views/Social.vue'),
         children: [
           {
-            path: 'tab3',
-            redirect: '/tabs3/tab1'
+            path: 'social',
+            redirect: '/tabs/social/buscar'
           },
           {
-            path: '/tabs3/tab1',
+            path: '/tabs/social/buscar',
             component: () => import('@/views/Buscar.vue')
           },
           {
-            path: '/tabs3/tab2',
+            path: '/tabs/social/peticiones',
             component: () => import('@/views/Peticiones.vue')
           },
           {
-            path: '/tabs3/tab3',
+            path: '/tabs/social/amigos',
             component: () => import('@/views/Amigos.vue')
           },
           {
-            path: '/tabs3/tab4',
-            component: () => import('@/views/Cuenta.vue')
+            path: '/tabs/social/perfil',
+            component: () => import('@/views/Perfil.vue')
           }
         ]
       }

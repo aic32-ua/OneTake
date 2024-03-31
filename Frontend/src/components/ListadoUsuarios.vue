@@ -1,69 +1,67 @@
 <script>
-
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import ClienteAPI from '../ClienteAPI'
 import Usuario from './Usuario.vue'
-import { ref } from 'vue'
+import Buscador from './Buscador.vue'
+import { ref, defineProps} from 'vue'
 
 export default{
     components:{
-    Usuario
+    Usuario,
+    Buscador
 },
-    setup(){
+    props: {
+        tipoLista: String
+    },
+    setup(props){
+
+        const tipoLista = props.tipoLista;
+
         const usuarioLogeadoStore = useUsuarioLogeadoStore(); 
         const api = new ClienteAPI();
 
         const usuarios = ref([]);
 
         const obtenerUsuarios = async () => {
-        usuarios.value = await api.verListadoAmigos(usuarioLogeadoStore.idUsu);
+            usuarios.value = await api.verListadoAmigos(usuarioLogeadoStore.idUsu);
         };
 
-        obtenerUsuarios();
+        const buscarUsuarios = async (nombre) => {
+            usuarios.value = await api.buscarUsuarioPorNick(nombre);
+        };
 
-        return {usuarioLogeadoStore, api, usuarios};
-    },
+        if(tipoLista=="home"){
+            obtenerUsuarios();
+        }
+
+        return {usuarioLogeadoStore, api, usuarios, tipoLista, buscarUsuarios};
+    }
 }
 </script>
 
 <template>
-    <div class="page">
-        <ul>
-            <Usuario v-for="usuario in usuarios"
-            :nick=usuario.nick
-            :video=usuario.video
-            />
-        </ul>
-        <br/>
-    </div>
+    <Buscador v-if="tipoLista=='buscar'" @buscarUsuarios="buscarUsuarios"/>
+    <ul>
+        <Usuario v-for="usuario in usuarios"
+        :nick=usuario.nick
+        :video=usuario.video
+        />
+    </ul>
 </template>
 
 <style scoped>
 
-.page{
-    padding: 0px 30px 0px 30px;
-}
-
 .top{
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
     align-items: center;
 }
 
 ul{
     display: flex;
     flex-wrap: wrap;
-    flex-direction: row;
+    width: 100%;
+    flex-direction: column;
     list-style: none;
-    align-items: center;
 }
-
-ul > li {
-    flex-basis: calc(100% / 10); /* Establece el ancho inicial basado en 7 elementos por fila */
-    box-sizing: border-box; /* Asegura que el tamaño total incluya el relleno y el borde */
-    align-items: center;
-    margin: 20px 50px;
-}
-
 </style>

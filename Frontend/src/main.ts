@@ -26,9 +26,11 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 
 import { addIcons } from 'ionicons';
-import { homeSharp, personAdd, film } from 'ionicons/icons';
+import {search, searchSharp,homeSharp, personAdd, film } from 'ionicons/icons';
 
 addIcons({
+  'search-sharp': searchSharp,
+  'search': search,
   'home-sharp': homeSharp,
   'person-add': personAdd,
   'film': film

@@ -23,4 +23,7 @@ export default{
 </template>
 
 <style scoped>
+.li{
+    height: 60px;
+}
 </style>

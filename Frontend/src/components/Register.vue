@@ -89,6 +89,7 @@ input {
   border-radius: 10px;
   padding: 8px;
   margin-bottom: 20px;
+  outline: none;
   box-sizing: border-box;
   font-size: 16px;
   background-color: rgba(188, 188, 188, 0.25);

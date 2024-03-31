@@ -6,7 +6,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
-      <ListadoUsuarios/>
+      <ListadoUsuarios tipoLista="home"/>
     </ion-content>
   </ion-page>
 </template>
