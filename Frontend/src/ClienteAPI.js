@@ -115,7 +115,7 @@ class ClienteAPI {
             if (!response.ok) {
                 throw new Error('Error al obtener información de usuario');
             }
-
+            
             return await response.json();
         } catch (error) {
             console.error('Error al obtener información de usuario:', error.message);
@@ -151,7 +151,7 @@ class ClienteAPI {
             });
 
             if (!response.ok) {
-                throw new Error('Error al enviar petición de amistad');
+                throw new Error('Error al enviar petición de amistad: ' + response.message);
             }
 
             return await response.json();
@@ -192,10 +192,6 @@ class ClienteAPI {
                 },
             });
 
-            if (!response.ok) {
-                throw new Error('Error al aceptar petición de amistad');
-            }
-
             return response.status;
         } catch (error) {
             console.error('Error al aceptar petición de amistad:', error.message);
@@ -212,10 +208,6 @@ class ClienteAPI {
                     'Authorization': 'Bearer ' + localStorage.getItem('token'),
                 },
             });
-
-            if (!response.ok) {
-                throw new Error('Error al rechazar petición de amistad');
-            }
 
             return response.status;
         } catch (error) {

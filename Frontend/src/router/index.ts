@@ -30,7 +30,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/Social.vue'),
         children: [
           {
-            path: 'social',
+            path: '',
             redirect: '/tabs/social/buscar'
           },
           {
@@ -40,10 +40,6 @@ const routes: Array<RouteRecordRaw> = [
           {
             path: '/tabs/social/peticiones',
             component: () => import('@/views/Peticiones.vue')
-          },
-          {
-            path: '/tabs/social/amigos',
-            component: () => import('@/views/Amigos.vue')
           },
           {
             path: '/tabs/social/perfil',
@@ -60,6 +56,10 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/register',
     component: RegisterPage
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/login'
   }
 ];
 

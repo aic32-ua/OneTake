@@ -18,10 +18,6 @@
             <ion-label>Peticiones</ion-label>
           </ion-tab-button>
 
-          <ion-tab-button tab="amigos" href="/tabs/social/amigos">
-            <ion-label>Amigos</ion-label>
-          </ion-tab-button>
-
           <ion-tab-button tab="perfil" href="/tabs/social/perfil">
             <ion-label>Perfil</ion-label>
           </ion-tab-button>

@@ -412,7 +412,7 @@ app.get('/usuarios/buscar/:nick',async function(req,resp) {
 
     let nickParam = req.params.nick
     let usuarios = await Usuario.findAll({where: { 
-        id: { [Sequelize.Op.not]: userId },
+        id: { [Sequelize.Op.not]: retCode.id },
         nick: { [Sequelize.Op.like]: '%' + nickParam + '%' }
     }});
     const userId = retCode.id;

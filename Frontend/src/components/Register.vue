@@ -16,7 +16,6 @@ export default{
                 var usuario = {nick: this.nickName, email: this.email, password: this.password}
                 const cli = new ClienteAPI();
                 const resp = await cli.registro(usuario);
-                console.log(resp)
                 if(resp.id){
                     this.$router.push({path: '/login'});
                 }
