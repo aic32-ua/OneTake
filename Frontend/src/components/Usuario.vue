@@ -1,13 +1,10 @@
 <script>
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
-import ClienteAPI from '../ClienteAPI'
-import { ref } from 'vue'
 export default{
-    props: ["nick", "video", "id", "tipoLista", "peticion" ,"idPeticion"],
+    props: ["nick", "video", "id", "tipoLista", "peticion" ,"idPeticion", "foto"],
     emits: ['enviarPeticion', 'aceptarPeticion', 'rechazarPeticion'],
     setup(props, { emit }) {
         const usuarioLogeadoStore = useUsuarioLogeadoStore();
-        const usuario = ref(null)
 
         const enviarPeticion = () => {
             emit("enviarPeticion", props.id);
@@ -19,17 +16,7 @@ export default{
             emit("rechazarPeticion", props.idPeticion);
         };
 
-        const api = new ClienteAPI();
-
-        const obtenerInfoUsu = async () => {
-            usuario.value =  await api.obtenerInformacionUsuario(props.id)
-        };
-
-        if(props.tipoLista == "peticiones"){
-            obtenerInfoUsu()
-        }
-
-        return { usuarioLogeadoStore, usuario, enviarPeticion, aceptarPeticion, rechazarPeticion};
+        return { usuarioLogeadoStore, enviarPeticion, aceptarPeticion, rechazarPeticion};
     }
 }
 
@@ -39,12 +26,14 @@ export default{
     
     <li :id="id">
         <div class="container">
-            <p v-if="tipoLista=='peticiones'">{{usuario ? usuario.nick : ''}}</p>
-            <p v-else>{{nick}}</p>
-            <div class="contenedorBotones">
-                <button class="aceptar-button" v-if="tipoLista=='buscar' && !peticion" @click="enviarPeticion">Añadir amigo</button>
-                <button class="aceptar-button" v-if="tipoLista=='peticiones'" @click="aceptarPeticion">Aceptar</button>
-                <button class="rechazar-button" v-if="tipoLista=='peticiones'" @click="rechazarPeticion">Rechazar</button>
+            <div class="usuario">
+                <img alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/fotoPerfil': 'https://via.placeholder.com/50x50'">
+                <p>{{nick}}</p>
+            </div>
+            <button class="aceptar-button" v-if="tipoLista=='buscar' && !peticion" @click="enviarPeticion">Añadir amigo</button>
+            <div v-if="tipoLista=='peticiones'" class="contenedorBotones">
+                <button class="aceptar-button"  @click="aceptarPeticion">Aceptar</button>
+                <button class="rechazar-button" @click="rechazarPeticion">Rechazar</button>
             </div>
         </div>
     </li>
@@ -52,8 +41,9 @@ export default{
 </template>
 
 <style scoped>
-.li{
-    height: 60px;
+.usuario{
+    display: flex;
+    flex-direction: row;
 }
 
 .container{
@@ -62,6 +52,7 @@ export default{
     align-items: center;
     justify-content: space-between;
     padding-right: 15px;
+    height: 60px
 }
 
 .contenedorBotones{
@@ -70,6 +61,13 @@ export default{
     align-items: center;
     justify-content: space-between;
     width: 50%;
+}
+
+img{
+    height: 50px;
+    width: 50px;
+    border-radius: 25px;
+    margin-right: 10px;
 }
 
 button{

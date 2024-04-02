@@ -21,7 +21,6 @@ export default{
         const api = new ClienteAPI();
 
         const usuarios = ref([]);
-        const peticiones = ref([]);
         const busqueda = ref(null)
 
         const obtenerUsuarios = async () => {
@@ -39,7 +38,13 @@ export default{
         };
 
         const obtenerPeticiones = async () => {
-            peticiones.value = await api.verListadoPeticionesAmistadUsuario(usuarioLogeadoStore.idUsu);
+            const peticiones = await api.verListadoPeticionesAmistadUsuario(usuarioLogeadoStore.idUsu);
+            usuarios.value = [];
+            for (const peticion of peticiones) {
+                const usuario = await api.obtenerInformacionUsuario(peticion.id_emisor);
+                usuario.idPeticion = peticion.id;
+                usuarios.value.push(usuario);
+            }
         };
 
         const aceptarPeticion = async (id) => {
@@ -59,35 +64,30 @@ export default{
             obtenerPeticiones();
         }
 
-        return { usuarios, peticiones, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion};
+        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion};
     }
 }
 </script>
 
 <template>
     <Buscador v-if="tipoLista=='buscar'" @buscarUsuarios="buscarUsuarios"/>
-    <ul v-if="tipoLista!='peticiones' && usuarios.length > 0">
+    <ul v-if="usuarios.length > 0">
         <Usuario v-for="usuario in usuarios"
         :nick=usuario.nick
         :video=usuario.video
         :id="usuario.id"
         :peticion="usuario.peticion"
+        :idPeticion="usuario.idPeticion"
         :tipoLista=tipoLista
+        :foto="usuario.foto"
         @enviarPeticion="enviarPeticion"
-        />
-    </ul>
-    <ul v-if="tipoLista=='peticiones' && peticiones.length > 0">
-        <Usuario v-for="peticion in peticiones"
-        :id="peticion.id_emisor"
-        :idPeticion="peticion.id"
-        :tipoLista=tipoLista
         @aceptarPeticion="aceptarPeticion"
         @rechazarPeticion="rechazarPeticion"
         />
     </ul>
 
     <p class="message" v-if="(tipoLista === 'home') && usuarios.length === 0">¡Añade amigos desde el tab social para no perderte nada!</p>
-    <p class="message" v-else-if="tipoLista === 'peticiones' && peticiones.length === 0">No hay peticiones de amistad pendientes.</p>
+    <p class="message" v-else-if="tipoLista === 'peticiones' && usuarios.length === 0">No hay peticiones de amistad pendientes.</p>
     
 </template>
 
@@ -98,6 +98,7 @@ ul{
     width: 100%;
     flex-direction: column;
     list-style: none;
+    padding-left: 20px;
 }
 
 .message{

@@ -91,6 +91,7 @@ input {
   outline: none;
   box-sizing: border-box;
   font-size: 16px;
+  border: none;
   background-color: rgba(188, 188, 188, 0.25);
 }
 

@@ -341,7 +341,7 @@ app.put('/usuarios/:id',async function(req,resp) {
     }
 
     try{
-        await Usuario.update({email: usu.email, password: passwordHash.generate(usu.password), nombre: usu.nombre, nick: usu.nick}, {where: { id: idParam }})
+        await Usuario.update({email: usu.email, password: passwordHash.generate(usu.password), nick: usu.nick}, {where: { id: idParam }})
         resp.setHeader('Location', 'http://localhost:3000/usuarios/' + idParam)
         resp.status(200).send(await Usuario.findOne({where: { email: usu.email }}))
     }
@@ -411,7 +411,7 @@ app.get('/usuarios/:id',async function(req,resp) {
         })
     }
 
-    let item = await Usuario.findByPk(id, {attributes: ['nombre', 'email', 'nick', 'video']})
+    let item = await Usuario.findByPk(id, {attributes: ['email', 'nick', 'video']})
     if(!item){
         return resp.status(404).send({
             code:3,
@@ -419,7 +419,7 @@ app.get('/usuarios/:id',async function(req,resp) {
         })
     }
 
-    resp.status(200).send({nombre: item.nombre, email: item.email, nick: item.nick})
+    resp.status(200).send({email: item.email, nick: item.nick})
 })
 
 //6. buscar usuario por nick paginacion?
@@ -448,13 +448,32 @@ app.get('/usuarios/buscar/:nick',async function(req,resp) {
     const userId = retCode.id;
 
     for (const usuario of usuarios) {
-        const peticion = await PeticionAmistad.findOne({
+        const amistadExistente = await RelacionAmistad.findOne({
             where: {
-                id_emisor: userId,
-                id_receptor: usuario.id
+                [Sequelize.Op.or]: [
+                    { id_usuario1: userId, id_usuario2: usuario.id },
+                    { id_usuario1: usuario.id, id_usuario2: userId }
+                ]
             }
         });
-        usuario.dataValues.peticion = peticion !== null;
+        if (amistadExistente) {
+            usuario.dataValues.peticion = true;
+            continue;
+        }
+
+        const peticionExistente = await PeticionAmistad.findOne({
+            where: {
+                [Sequelize.Op.or]: [
+                    { id_emisor: userId, id_receptor: usuario.id },
+                    { id_emisor: usuario.id, id_receptor: userId }
+                ]
+            }
+        });
+        if (peticionExistente) {
+            usuario.dataValues.peticion = true;
+        } else {
+            usuario.dataValues.peticion = false;
+        }
     }
 
     resp.status(200)
@@ -496,20 +515,42 @@ app.post('/usuarios/:idEmisor/peticiones/:idReceptor',async function(req,resp) {
         })
     }
 
-    try{
-        let peticion = await PeticionAmistad.create({
-            id_emisor : idEmisor,
-            id_receptor : idReceptor
-        })
-        resp.status(201).send(peticion)
-    }
-    catch(error){
-        console.log(error)
-        return resp.status(400).send({
-            code: 1,
-            message: `Error desconocido.`
+    let amistadExistente = await RelacionAmistad.findOne({
+        where: {
+            [Op.or]: [
+                { id_usuario1: idEmisor, id_usuario2: idReceptor },
+                { id_usuario1: idReceptor, id_usuario2: idEmisor }
+            ]
+        }
+    });
+    if (amistadExistente) {
+        return resp.status(409).send({
+            code: 2,
+            message: "Los usuarios ya son amigos, no se puede enviar una solicitud de amistad"
         });
     }
+
+    let peticionExistente = await PeticionAmistad.findOne({ where: { id_emisor: idEmisor, id_receptor: idReceptor } });
+    if (peticionExistente) {
+        return resp.status(409).send({
+            code: 2,
+            message: "Ya existe una petición de amistad de este emisor a este receptor"
+        });
+    }
+
+    peticionExistente = await PeticionAmistad.findOne({ where: { id_emisor: idReceptor, id_receptor: idEmisor } });
+    if (peticionExistente) {
+        return resp.status(409).send({
+            code: 2,
+            message: "Ya existe una petición de amistad de este receptor a este emisor"
+        });
+    }
+
+    let peticion = await PeticionAmistad.create({
+        id_emisor : idEmisor,
+        id_receptor : idReceptor
+    })
+    resp.status(201).send(peticion)
 
 })
 
@@ -582,10 +623,20 @@ app.delete('/peticiones/:id/aceptar',async function(req,resp) {
         })
     }
 
+    let id1 = item.id_emisor
+    let id2 = item.id_receptor
+
+    if(id1>id2){ //las relaciones de amistad siempre tendran como id1 el menor de los ids
+        const id3 = id1
+        id1 = id2
+        id2 = id3
+    }
+
     await RelacionAmistad.create({
-        id_usuario1: item.id_emisor,
-        id_usuario2: item.id_receptor
+        id_usuario1: id1,
+        id_usuario2: id2
     })
+
     await PeticionAmistad.destroy({where: { id: idParam }})
     resp.status(204).send()
     
@@ -672,7 +723,7 @@ app.get('/usuarios/:id/amigos',async function(req,resp) {
             }
         });
 
-        const amigos = await Usuario.findAll({ where: { id: idsAmigos }, attributes: ['nombre', 'email', 'nick', 'video']});
+        const amigos = await Usuario.findAll({ where: { id: idsAmigos }, attributes: ['email', 'nick', 'video', 'foto']});
 
         resp.status(200).send(amigos);
     } catch (error) {
@@ -856,6 +907,38 @@ app.post('/usuarios/:id/foto', uploadFoto.single('foto'), async function(req, re
         console.error("Error al subir la foto:", error);
         resp.status(500).json({ error: 'Error al subir la foto.' });
     }
+});
+
+app.get('/usuarios/:id/fotoPerfil', async function(req, resp) {
+    let idParam = parseInt(req.params.id);
+    if (isNaN(idParam)) {
+        return resp.status(400).send({
+            code: 1,
+            message: "El parametro id debe ser un numero"
+        });
+    }
+
+    let user = await Usuario.findByPk(idParam);
+    if (!user) {
+        return resp.status(404).send({
+            code: 3,
+            message: "El usuario no existe"
+        });
+    }
+
+    if (!user.foto) {
+        return resp.status(404).json({ message: 'Foto de perfil no encontrada.' });
+    }
+
+    fs.readFile(user.foto, (err, data) => {
+        if (err) {
+            console.error("Error al leer la foto de perfil:", err);
+            return resp.status(500).json({ message: 'Error al cargar la foto de perfil.' });
+        }
+
+        resp.setHeader('Content-Type', 'image/' + path.extname(user.foto).toLowerCase());
+        resp.send(data);
+    });
 });
 
 //dev endpoints:
