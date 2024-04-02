@@ -93,6 +93,7 @@ input {
   padding: 8px;
   margin-bottom: 20px;
   box-sizing: border-box;
+  border: none;
   outline: none;
   font-size: 16px;
   background-color: rgba(188, 188, 188, 0.25);

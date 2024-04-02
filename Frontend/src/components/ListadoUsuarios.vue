@@ -66,8 +66,8 @@ export default{
 
 <template>
     <Buscador v-if="tipoLista=='buscar'" @buscarUsuarios="buscarUsuarios"/>
-    <ul>
-        <Usuario v-for="usuario in usuarios" v-if="tipoLista!='peticiones'"
+    <ul v-if="tipoLista!='peticiones' && usuarios.length > 0">
+        <Usuario v-for="usuario in usuarios"
         :nick=usuario.nick
         :video=usuario.video
         :id="usuario.id"
@@ -75,7 +75,9 @@ export default{
         :tipoLista=tipoLista
         @enviarPeticion="enviarPeticion"
         />
-        <Usuario v-for="peticion in peticiones" v-if="tipoLista=='peticiones'"
+    </ul>
+    <ul v-if="tipoLista=='peticiones' && peticiones.length > 0">
+        <Usuario v-for="peticion in peticiones"
         :id="peticion.id_emisor"
         :idPeticion="peticion.id"
         :tipoLista=tipoLista
@@ -83,6 +85,10 @@ export default{
         @rechazarPeticion="rechazarPeticion"
         />
     </ul>
+
+    <p class="message" v-if="(tipoLista === 'home') && usuarios.length === 0">¡Añade amigos desde el tab social para no perderte nada!</p>
+    <p class="message" v-else-if="tipoLista === 'peticiones' && peticiones.length === 0">No hay peticiones de amistad pendientes.</p>
+    
 </template>
 
 <style scoped>
@@ -92,5 +98,12 @@ ul{
     width: 100%;
     flex-direction: column;
     list-style: none;
+}
+
+.message{
+    margin-left: 30px;
+    margin-right: 30px;
+    margin-top: 20px;
+    color: #BCBCBC;
 }
 </style>
