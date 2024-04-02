@@ -12,7 +12,7 @@ let passwordHash = require('password-hash');
 let jwt = require('jsonwebtoken');
 
 const secret = "123456";
-const expiresIn = 3600; //1 hora
+const expiresIn = 3600 * 24 * 3; //3 dias, añadir que en cada peticion en la que se envia un token valido, se genere uno nuevo, de forma que no tengas que iniciar sesion a menos que estes 3 dias seguidos sin usar la aplicacion
 
 const path = require('path');
 const fs = require('fs');
@@ -40,6 +40,32 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+const uploadFoto = multer({ storage: multer.diskStorage({
+        destination: function (req, file, cb) {
+            const path = "/mnt/volumen/imagenes";
+            if (!fs.existsSync(path)) {
+                fs.mkdirSync(path, { recursive: true });
+            }
+            cb(null, path);
+        },
+        filename: function (req, file, cb) {
+            cb(null, req.params.id + path.extname(file.originalname));
+        }
+    }),
+    fileFilter: function (req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            return cb(new Error('Solo se permiten imágenes'));
+        }
+        cb(null, true);
+    }
+});
+
+const eliminarFoto = async(ruta) => {
+    if(fs.existsSync(ruta)) {
+        fs.unlinkSync(ruta);
+    }
+}
+
 const { Sequelize, DataTypes, Op} = require('sequelize');
 
 const sequelize = new Sequelize('OneTake', 'user', '1234', {
@@ -66,6 +92,10 @@ const Usuario = sequelize.define('USUARIO', {
     password: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    foto: {
+        type: DataTypes.STRING,
+        unique: true
     },
     video: {
         type: DataTypes.BOOLEAN
@@ -144,7 +174,7 @@ function obtenerIdToken(token){ //algunos metodos estan disponibles para todos l
     }
 }
 
-function verificarToken(token, id){ //anadir que aqui se compruebe que el usuario con ese id existe para simplificar los endpoints
+function verificarToken(token, id){
     try{
         const decoded = jwt.verify(token,secret)
         if(!decoded || !decoded.idToken){
@@ -253,7 +283,7 @@ app.post('/login', async function(req,resp) {
         })
     }
     
-    if(!(passwordHash.verify(usu.password, usuEmail.password))){ //comprobar que usuEmail sea lista
+    if(!(passwordHash.verify(usu.password, usuEmail.password))){
         return resp.status(400).send({
             code:1,
             message: "Contraseña incorrecta."
@@ -792,7 +822,43 @@ app.patch('/usuarios/:id/video', upload.single('video'), async function(req,resp
     resp.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
 })
 
-//dev endpoint
+//16. Subir foto perfil
+app.post('/usuarios/:id/foto', uploadFoto.single('foto'), async function(req, resp) {
+    try{
+        let idParam = parseInt(req.params.id);
+        if (isNaN(idParam)) {
+            return resp.status(400).send({
+                code: 1,
+                message: "El parametro id debe ser un numero"
+            });
+        }
+
+        let user = await Usuario.findByPk(idParam);
+        if (!user) {
+            return resp.status(404).send({
+                code: 3,
+                message: "El usuario no existe"
+            });
+        }
+
+        if (!req.file || !req.file.originalname) {
+            return resp.status(400).send({
+                code: 1,
+                message: "Archivo incorrecto"
+            });
+        }
+
+        await eliminarFoto(await Usuario.findByPk(idParam, {attributes: ['foto']}).foto) //es necesario eliminar la foto ya que si tienen diferente formato no la va a sobreescribir
+        await Usuario.update({ foto: req.file.path }, { where: { id: idParam } });
+
+        resp.json({ message: 'Foto de perfil subida correctamente.' });
+    } catch (error) {
+        console.error("Error al subir la foto:", error);
+        resp.status(500).json({ error: 'Error al subir la foto.' });
+    }
+});
+
+//dev endpoints:
 app.get('/usuarioCompleto/:id',async function(req,resp) {
     id = parseInt(req.params.id)
     if(isNaN(id)){
@@ -814,7 +880,6 @@ app.get('/usuarioCompleto/:id',async function(req,resp) {
     resp.send(item)
 })
 
-//dev endpoint
 app.get('/usuariosCompleto/',async function(req,resp) {
     resp.status(200)
     resp.send(await Usuario.findAll())
@@ -831,7 +896,7 @@ app.get('/amistad',async function(req,resp) {
 })
 
 app.post('/usuarios/:id/video', upload.single('video'), async function(req, res){
-    await channel.sendToQueue(queue, Buffer.from(req.params.id + path.extname(req.file.originalname))); //pongo el nombre del archivo en la cola
+    await channel.sendToQueue(queue, Buffer.from(req.params.id + path.extname(req.file.originalname)));
     res.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
 })
 
