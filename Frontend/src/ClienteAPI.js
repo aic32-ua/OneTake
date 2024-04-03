@@ -96,10 +96,6 @@ class ClienteAPI {
                 },
             });
 
-            if (!response.ok) {
-                throw new Error('Error al borrar cuenta de usuario');
-            }
-
             return response.status;
         } catch (error) {
             console.error('Error al borrar cuenta de usuario:', error.message);
@@ -279,6 +275,31 @@ class ClienteAPI {
             return await response.json();
         } catch (error) {
             console.error('Error al publicar video de usuario:', error.message);
+            throw error;
+        }
+    }
+
+    async subirFoto(idUsuario, foto) {
+        try {
+            const url = `${this.baseURL}/usuarios/${idUsuario}/foto`;
+            const formData = new FormData();
+            formData.append('foto', foto);
+    
+            const response = await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                },
+                body: formData,
+            });
+    
+            if (!response.ok) {
+                throw new Error('Error al subir la foto');
+            }
+    
+            return await response.json();
+        } catch (error) {
+            console.error('Error subiendo foto:', error.message);
             throw error;
         }
     }

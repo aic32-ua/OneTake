@@ -1,22 +1,30 @@
 <script>
 import { IonIcon } from '@ionic/vue';
+import { ref,watch } from 'vue'
+import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 export default{
     components: {
         IonIcon
     },
     emits: ['buscarUsuarios'],
-    data: function(){
-        return{
-            nombre: ""
-        }
-    },
-    methods: {
-        async buscarUsuarios(){
-            if(this.nombre.length > 0 ){
-                this.$emit("buscarUsuarios", this.nombre)
+    setup(props, { emit }){
+
+        const usuarioLogeadoStore = useUsuarioLogeadoStore();
+
+        const nombre = ref(null)
+
+        const buscarUsuarios =  () => {
+            if(nombre.value.length > 0 ){
+                emit("buscarUsuarios", nombre.value)
             }
-        }
-    },
+        };
+
+        watch(usuarioLogeadoStore, () => {
+            nombre.value = null
+        });
+
+        return {nombre, buscarUsuarios}
+    }
 }
 </script>
 

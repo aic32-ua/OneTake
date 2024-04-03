@@ -2,10 +2,13 @@
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 export default{
     props: ["nick", "video", "id", "tipoLista", "peticion" ,"idPeticion", "foto"],
-    emits: ['enviarPeticion', 'aceptarPeticion', 'rechazarPeticion'],
+    emits: ['mostrarPerfil', 'enviarPeticion', 'aceptarPeticion', 'rechazarPeticion'],
     setup(props, { emit }) {
         const usuarioLogeadoStore = useUsuarioLogeadoStore();
 
+        const mostrarPerfil = () => {
+            emit("mostrarPerfil", props.id);
+        };
         const enviarPeticion = () => {
             emit("enviarPeticion", props.id);
         };
@@ -16,7 +19,7 @@ export default{
             emit("rechazarPeticion", props.idPeticion);
         };
 
-        return { usuarioLogeadoStore, enviarPeticion, aceptarPeticion, rechazarPeticion};
+        return { usuarioLogeadoStore, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfil};
     }
 }
 
@@ -27,8 +30,8 @@ export default{
     <li :id="id">
         <div class="container">
             <div class="usuario">
-                <img alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/fotoPerfil': 'https://via.placeholder.com/50x50'">
-                <p>{{nick}}</p>
+                <img :class="{ 'video-border': video }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/50x50'">
+                <p @click="mostrarPerfil">{{nick}}</p>
             </div>
             <button class="aceptar-button" v-if="tipoLista=='buscar' && !peticion" @click="enviarPeticion">Añadir amigo</button>
             <div v-if="tipoLista=='peticiones'" class="contenedorBotones">
@@ -85,5 +88,9 @@ button{
 
 .rechazar-button {
     background-color: rgba(255, 0, 0, 0.75);
+}
+
+.video-border {
+    border: 2px solid rgba(0, 255, 25, 0.82);
 }
 </style>

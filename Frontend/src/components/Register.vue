@@ -17,6 +17,10 @@ export default{
                 const cli = new ClienteAPI();
                 const resp = await cli.registro(usuario);
                 if(resp.id){
+                    this.nickName = '';
+                    this.email = '';
+                    this.password = '';
+                    this.error = '';
                     this.$router.push({path: '/login'});
                 }
                 else{

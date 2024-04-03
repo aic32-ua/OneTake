@@ -19,6 +19,9 @@ export default{
                 const resp = await cli.login(this.email, this.password);
                 if(resp.jwt){
                   this.usuarioLogeadoStore.iniciarSesion({ newToken: resp.jwt, newUsuario: this.email, newId: resp.id});
+                  this.email = '';
+                  this.password = '';
+                  this.error = '';
                   this.$router.push({path: 'tabs'});
                 }
                 else{

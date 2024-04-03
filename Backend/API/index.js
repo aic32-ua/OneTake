@@ -156,6 +156,12 @@ const RelacionAmistad = sequelize.define('RELACION_AMISTAD', {
     tableName: 'RELACION_AMISTAD',
 });
 
+Usuario.hasMany(PeticionAmistad, { foreignKey: 'id_emisor', onDelete: 'CASCADE' });
+Usuario.hasMany(PeticionAmistad, { foreignKey: 'id_receptor', onDelete: 'CASCADE' });
+
+Usuario.hasMany(RelacionAmistad, { foreignKey: 'id_usuario1', onDelete: 'CASCADE' });
+Usuario.hasMany(RelacionAmistad, { foreignKey: 'id_usuario2', onDelete: 'CASCADE' });
+
 function obtenerIdToken(token){ //algunos metodos estan disponibles para todos los usuarios pero se necesita identificar quien esta accediendo
     try{
         const decoded = jwt.verify(token,secret)
@@ -723,7 +729,7 @@ app.get('/usuarios/:id/amigos',async function(req,resp) {
             }
         });
 
-        const amigos = await Usuario.findAll({ where: { id: idsAmigos }, attributes: ['email', 'nick', 'video', 'foto']});
+        const amigos = await Usuario.findAll({ where: { id: idsAmigos }, attributes: ['id', 'email', 'nick', 'video', 'foto']});
 
         resp.status(200).send(amigos);
     } catch (error) {
@@ -874,7 +880,7 @@ app.patch('/usuarios/:id/video', upload.single('video'), async function(req,resp
 })
 
 //16. Subir foto perfil
-app.post('/usuarios/:id/foto', uploadFoto.single('foto'), async function(req, resp) {
+app.patch('/usuarios/:id/foto', uploadFoto.single('foto'), async function(req, resp) {
     try{
         let idParam = parseInt(req.params.id);
         if (isNaN(idParam)) {
@@ -899,6 +905,21 @@ app.post('/usuarios/:id/foto', uploadFoto.single('foto'), async function(req, re
             });
         }
 
+        const authHeader = req.headers["authorization"]
+        let retCode;
+        if(!authHeader){
+            retCode = {code: 4, msg:"No autorizado"};
+        }
+        else{
+            retCode = verificarToken(authHeader.split(' ')[1], idParam)
+        }
+        if(retCode.code != 0){
+            return resp.status(401).send({
+                code:retCode.code,
+                message: retCode.msg
+            })
+        }
+
         await eliminarFoto(await Usuario.findByPk(idParam, {attributes: ['foto']}).foto) //es necesario eliminar la foto ya que si tienen diferente formato no la va a sobreescribir
         await Usuario.update({ foto: req.file.path }, { where: { id: idParam } });
 
@@ -909,7 +930,7 @@ app.post('/usuarios/:id/foto', uploadFoto.single('foto'), async function(req, re
     }
 });
 
-app.get('/usuarios/:id/fotoPerfil', async function(req, resp) {
+app.get('/usuarios/:id/foto', async function(req, resp) {
     let idParam = parseInt(req.params.id);
     if (isNaN(idParam)) {
         return resp.status(400).send({
