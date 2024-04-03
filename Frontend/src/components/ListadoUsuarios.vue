@@ -82,6 +82,14 @@ export default{
             obtenerPeticiones();
         };
 
+        const borrarAmigo = async (id) => {
+            cerrarModal()
+            await api.borrarRelacionAmistad(usuarioLogeadoStore.idUsu, id)
+            if(tipoLista=="home"){
+                obtenerUsuarios();
+            }
+        };
+
         if(tipoLista=="home"){
             obtenerUsuarios();
         }
@@ -110,7 +118,7 @@ export default{
             }
         });
 
-        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfilUsuario, cerrarModal, mostrarModal, idPerfil};
+        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfilUsuario, cerrarModal, borrarAmigo, mostrarModal, idPerfil};
     }
 }
 </script>
@@ -136,14 +144,15 @@ export default{
     <ion-modal :is-open="mostrarModal">
         <ion-header>
             <ion-toolbar>
-            <ion-title>Modal</ion-title>
+            <ion-title>Perfil</ion-title>
             <ion-buttons slot="end">
                 <ion-button @click="cerrarModal">Cerrar</ion-button>
             </ion-buttons>
             </ion-toolbar>
         </ion-header>
         <ion-content class="ion-padding">
-            <Perfil :id="idPerfil"/>
+            <Perfil :id="idPerfil"
+            @borrarAmigo="borrarAmigo"/>
         </ion-content>
     </ion-modal>
 

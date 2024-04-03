@@ -212,6 +212,23 @@ class ClienteAPI {
         }
     }
 
+    async borrarRelacionAmistad(id1, id2) {
+        try {
+            const url = `${this.baseURL}/amistad/${id1}/${id2}`;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                },
+            });
+
+            return response.status;
+        } catch (error) {
+            console.error('Error al borrar relacion de amistad:', error.message);
+            throw error;
+        }
+    }
+
     async verListadoAmigos(id) {
         try {
             const url = `${this.baseURL}/usuarios/${id}/amigos`;

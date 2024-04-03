@@ -742,16 +742,22 @@ app.get('/usuarios/:id/amigos',async function(req,resp) {
 })
 
 //13. Eliminar relacion amistad
-app.delete('/amistad/:id',async function(req,resp) {
-    let idParam = parseInt(req.params.id)
-    if(isNaN(idParam)){
+app.delete('/amistad/:id1/:id2',async function(req,resp) {
+    let idParam1 = parseInt(req.params.id1)
+    let idParam2 = parseInt(req.params.id2)
+    if(isNaN(idParam1) || isNaN(idParam2)){
         return resp.status(400).send({
             code:1,
-            message: "El parametro id debe ser un numero"
+            message: "Los parametros id deben ser numeros"
         })
     }
 
-    let item = await RelacionAmistad.findByPk(idParam)
+    let item = await RelacionAmistad.findOne({where : {
+        [Op.or]: [
+            { id_usuario1: idParam1, id_usuario2: idParam2 },
+            { id_usuario1: idParam2, id_usuario2: idParam1 }
+        ]
+    }})
     if(!item){
         return resp.status(404).send({
             code:3,
@@ -765,9 +771,9 @@ app.delete('/amistad/:id',async function(req,resp) {
     }
     else{
         token = authHeader.split(' ')[1] //quito el bearer
-        retCode = verificarToken(token, item.id_usuario1) //cualquiera de los dos usuarios en una relacion de amistad puede romperla
+        retCode = verificarToken(token, idParam1) //cualquiera de los dos usuarios en una relacion de amistad puede romperla
         if(retCode.code!=0){
-            retCode = verificarToken(token, item.id_usuario2)
+            retCode = verificarToken(token, idParam2)
         }
     }
     if(retCode.code != 0){
@@ -777,7 +783,7 @@ app.delete('/amistad/:id',async function(req,resp) {
         })
     }
 
-    await RelacionAmistad.destroy({where: { id: idParam }})
+    await RelacionAmistad.destroy({where: { id: item.id }})
     resp.status(204).send()
     
 })

@@ -10,7 +10,8 @@ export default{
         IonAlert
     },
     props: ["id"],
-    setup(props){
+    emits: ['borrarAmigo'],
+    setup(props, { emit }){
         const usuarioLogeadoStore = useUsuarioLogeadoStore(); 
         const api = new ClienteAPI();
         const router = useRouter()
@@ -41,8 +42,12 @@ export default{
 
         const cerrarSesion = () => {
             usuarioLogeadoStore.cerrarSesion;
-            router.push({path: 'login'});
+            router.replace({ path: '/login' });
         }
+
+        const borrarAmigo = () => {
+            emit("borrarAmigo", props.id);
+        };
 
         const alertaCerrada = async (event) => {
             if (event.detail.role === 'Borrar') {
@@ -55,7 +60,7 @@ export default{
             obtenerUsuario();
         });
 
-        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada};
+        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo};
     }
 }
 </script>
@@ -70,12 +75,15 @@ export default{
                 <button class="warning-button">Actualizar datos</button>
                 <button id="borrarCuenta" class="wrong-button">Borrar cuenta</button>
             </div>
+            <div v-if="id" class="buttons">
+                <button class="wrong-button" @click="borrarAmigo">Borrar amigo</button>
+            </div>
         </div>
         <p>{{usuario.nick}}</p>
         <p>{{usuario.email}}</p>
         <button v-if="!id" class="wrong-button" @click="cerrarSesion">Cerrar sesion</button>
 
-        <ion-alert
+        <ion-alert v-if="!id"
             trigger="borrarCuenta"
             header="Borrar cuenta"
             message="¿Estas seguro de que quieres borrar tu cuenta? Esta accion es irreversible."
