@@ -2,10 +2,13 @@
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 export default{
     props: ["nick", "video", "id", "tipoLista", "peticion" ,"idPeticion", "foto"],
-    emits: ['mostrarPerfil', 'enviarPeticion', 'aceptarPeticion', 'rechazarPeticion'],
+    emits: ['mostrarPerfil', 'mostrarVideo', 'enviarPeticion', 'aceptarPeticion', 'rechazarPeticion'],
     setup(props, { emit }) {
         const usuarioLogeadoStore = useUsuarioLogeadoStore();
 
+        const mostrarVideo = () => {
+            emit("mostrarVideo", props.id);
+        };
         const mostrarPerfil = () => {
             emit("mostrarPerfil", props.id);
         };
@@ -19,7 +22,7 @@ export default{
             emit("rechazarPeticion", props.idPeticion);
         };
 
-        return { usuarioLogeadoStore, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfil};
+        return { usuarioLogeadoStore, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfil, mostrarVideo};
     }
 }
 
@@ -30,7 +33,7 @@ export default{
     <li :id="id">
         <div class="container">
             <div class="usuario">
-                <img :class="{ 'video-border': video }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/50x50'">
+                <img :class="{ 'video-border': video }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/50x50'" @click="mostrarVideo">
                 <p @click="mostrarPerfil">{{nick}}</p>
             </div>
             <button class="aceptar-button" v-if="tipoLista=='buscar' && !peticion" @click="enviarPeticion">Añadir amigo</button>
@@ -47,6 +50,10 @@ export default{
 .usuario{
     display: flex;
     flex-direction: row;
+}
+
+p{
+    cursor: pointer;
 }
 
 .container{
@@ -92,5 +99,6 @@ button{
 
 .video-border {
     border: 2px solid rgba(0, 255, 25, 0.82);
+    cursor: pointer;
 }
 </style>

@@ -7,6 +7,7 @@ import Usuario from './Usuario.vue'
 import Perfil from './Perfil.vue'
 import Buscador from './Buscador.vue'
 import { ref,watch } from 'vue'
+import { videocam } from 'ionicons/icons';
 
 export default{
     components:{
@@ -32,6 +33,8 @@ export default{
         const usuarioLogeadoStore = useUsuarioLogeadoStore(); 
         const api = new ClienteAPI();
 
+        const videoUrl = ref(false)
+        const mostrarVideo = ref(false)
         const mostrarModal = ref(false)
         const idPerfil = ref(null)
 
@@ -40,9 +43,23 @@ export default{
             mostrarModal.value = true;
         };
 
+        const mostrarVideoUsuario = async (idUsuario) => {
+            let video = await api.verVideoUsuario(idUsuario)
+            videoUrl.value = URL.createObjectURL(video);
+            idPerfil.value = idUsuario
+            mostrarVideo.value = true;
+        };
+
         const cerrarModal = () => {
             idPerfil.value = null
             mostrarModal.value = false;
+        };
+
+        const cerrarModalVideo = () => {
+            idPerfil.value = null
+            videoUrl.value = null
+            URL.revokeObjectURL(videoUrl.value);
+            mostrarVideo.value = false;
         };
 
         const usuarios = ref([]);
@@ -118,7 +135,7 @@ export default{
             }
         });
 
-        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfilUsuario, cerrarModal, borrarAmigo, mostrarModal, idPerfil};
+        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfilUsuario, mostrarVideoUsuario, cerrarModal, cerrarModalVideo, borrarAmigo, mostrarModal, mostrarVideo, videoUrl, idPerfil};
     }
 }
 </script>
@@ -134,6 +151,7 @@ export default{
         :idPeticion="usuario.idPeticion"
         :tipoLista=tipoLista
         :foto="usuario.foto"
+        @mostrarVideo="mostrarVideoUsuario"
         @mostrarPerfil="mostrarPerfilUsuario"
         @enviarPeticion="enviarPeticion"
         @aceptarPeticion="aceptarPeticion"
@@ -153,6 +171,21 @@ export default{
         <ion-content class="ion-padding">
             <Perfil :id="idPerfil"
             @borrarAmigo="borrarAmigo"/>
+        </ion-content>
+    </ion-modal>
+
+    <ion-modal :is-open="mostrarVideo">
+        <ion-header>
+            <ion-toolbar>
+            <ion-title>Video</ion-title>
+            <ion-buttons slot="end">
+                <ion-button @click="cerrarModalVideo">Cerrar</ion-button>
+            </ion-buttons>
+            </ion-toolbar>
+        </ion-header>
+        <ion-content>
+            <video autoplay loop :src="videoUrl" style="width: 100%; height: 100%;">
+            </video>
         </ion-content>
     </ion-modal>
 

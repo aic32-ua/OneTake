@@ -30,10 +30,6 @@ import {search, searchSharp,homeSharp, personAdd, film } from 'ionicons/icons';
 
 addIcons({
   'search-sharp': searchSharp,
-  'search': search,
-  'home-sharp': homeSharp,
-  'person-add': personAdd,
-  'film': film
 });
 
 const app = createApp(App)

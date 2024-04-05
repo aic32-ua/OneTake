@@ -264,7 +264,7 @@ class ClienteAPI {
                 throw new Error('Error al ver video de usuario');
             }
 
-            return response.blob();
+            return await response.blob();
         } catch (error) {
             console.error('Error al ver video de usuario:', error.message);
             throw error;

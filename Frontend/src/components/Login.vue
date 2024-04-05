@@ -38,7 +38,7 @@ export default{
     <h1 class="onetake">OneTake</h1>
     
     <div :class="{ 'login-form': true, 'error-shake': error }">
-      <input type="text" placeholder="Nombre de usuario" v-model="email" required>
+      <input type="text" placeholder="Email" v-model="email" required>
       <input type="password" placeholder="Contraseña" v-model="password" required>
       <button class="login-button center-button" @click="iniciarSesion">Entrar</button>
 
