@@ -7,7 +7,9 @@ export default{
         const usuarioLogeadoStore = useUsuarioLogeadoStore();
 
         const mostrarVideo = () => {
-            emit("mostrarVideo", props.id);
+            if(props.video){
+                emit("mostrarVideo", props.id);
+            }
         };
         const mostrarPerfil = () => {
             emit("mostrarPerfil", props.id);

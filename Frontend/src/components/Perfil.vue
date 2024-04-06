@@ -86,7 +86,7 @@ export default{
     
     <div class="container">
         <div class="header">
-            <img alt="imagen" :src="usuario.foto ? 'http://localhost:3000/usuarios/' + usuario.id + '/foto?key=' + fotoUsuarioKey : 'https://via.placeholder.com/150x150'">
+            <img :class="{ 'video-border': usuario.video }" alt="imagen" :src="usuario.foto ? 'http://localhost:3000/usuarios/' + usuario.id + '/foto?key=' + fotoUsuarioKey : 'https://via.placeholder.com/150x150'">
             <div v-if="!id" class="buttons">
                 <button id="subirFoto" class="ok-button" @click="subirFoto=true">Modificar foto</button>
                 <ion-popover :is-open="subirFoto" trigger="subirFoto" trigger-action="click" @didDismiss="subirFoto = false" side="left" alignment="start" size="auto">
@@ -138,7 +138,7 @@ ion-popover {
 
 ion-popover ion-content {
     --background: rgba(188, 188, 188, 0.25);
-  }
+}
 
 .header{
     display: flex;
@@ -152,6 +152,12 @@ ion-popover ion-content {
 img{
     height: 150px;
     width: 150px;
+    border-radius: 75px;
+}
+
+.video-border {
+    border: 2px solid rgba(0, 255, 25, 0.82);
+    cursor: pointer;
 }
 
 .buttons{

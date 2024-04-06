@@ -22,10 +22,6 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/Home.vue')
       },
       {
-        path: 'publicar',
-        component: () => import('@/views/Publicar.vue')
-      },
-      {
         path: 'social',
         component: () => import('@/views/Social.vue'),
         children: [
