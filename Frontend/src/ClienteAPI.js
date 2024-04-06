@@ -314,7 +314,7 @@ class ClienteAPI {
                 throw new Error('Error al subir la foto');
             }
     
-            return await response.json();
+            return await response;
         } catch (error) {
             console.error('Error subiendo foto:', error.message);
             throw error;

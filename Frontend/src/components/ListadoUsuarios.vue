@@ -7,7 +7,6 @@ import Usuario from './Usuario.vue'
 import Perfil from './Perfil.vue'
 import Buscador from './Buscador.vue'
 import { ref,watch } from 'vue'
-import { videocam } from 'ionicons/icons';
 
 export default{
     components:{

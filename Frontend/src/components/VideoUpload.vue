@@ -29,14 +29,17 @@ export default{
 </script>
 
 <template>
-    <div>
-        <label for="video">Selecciona un video:</label>
-        <input type="file" id="video" name="video" accept="video/*" @change="handleFileUpload">
-        <br>
+    <div class="addFile">
+        <input type="file" id="video" name="video" accept="video/*" capture="user" @change="handleFileUpload">
         <input type="submit" @click="uploadVideo">
     </div>
 </template>
 
 <style scoped>
-
+.addFile{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 60px;
+}
 </style>

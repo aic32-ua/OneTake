@@ -1,13 +1,17 @@
 <script>
-import { IonAlert } from '@ionic/vue';
+import { IonAlert, IonPopover, IonContent } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import ClienteAPI from '../ClienteAPI'
+import FotoUpload from './FotoUpload.vue'
 import { ref,watch } from 'vue'
 import { useRouter } from 'vue-router';
 
 export default{
     components: {
-        IonAlert
+        IonAlert,
+        IonPopover,
+        IonContent,
+        FotoUpload
     },
     props: ["id"],
     emits: ['borrarAmigo'],
@@ -32,9 +36,11 @@ export default{
         const obtenerUsuario = async () => {
             if(!props.id){
                 usuario.value = await api.obtenerInformacionUsuario(usuarioLogeadoStore.idUsu);
+                usuario.value.id = usuarioLogeadoStore.idUsu
             }
             else{
                 usuario.value = await api.obtenerInformacionUsuario(props.id);
+                usuario.value.id = props.id
             }
         };
 
@@ -60,7 +66,18 @@ export default{
             obtenerUsuario();
         });
 
-        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo};
+        const fotoUsuarioKey = ref(null) //esta clave solo sirve para tener un valor variable en la url de la foto y poder recargarla al cambiar de foto
+        fotoUsuarioKey.value = new Date().getTime();
+
+        const subirFoto = ref(false)
+
+        const actualizarFoto = async () => {
+            await obtenerUsuario();
+            subirFoto.value=false;
+            fotoUsuarioKey.value = new Date().getTime();
+        };
+
+        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey};
     }
 }
 </script>
@@ -69,9 +86,15 @@ export default{
     
     <div class="container">
         <div class="header">
-            <img alt="imagen" :src="usuario.foto ? 'http://localhost:3000/usuarios/' + usuario.id + '/fotoPerfil': 'https://via.placeholder.com/150x150'">
+            <img alt="imagen" :src="usuario.foto ? 'http://localhost:3000/usuarios/' + usuario.id + '/foto?key=' + fotoUsuarioKey : 'https://via.placeholder.com/150x150'">
             <div v-if="!id" class="buttons">
-                <button class="ok-button">Modificar foto</button>
+                <button id="subirFoto" class="ok-button" @click="subirFoto=true">Modificar foto</button>
+                <ion-popover :is-open="subirFoto" trigger="subirFoto" trigger-action="click" @didDismiss="subirFoto = false" side="left" alignment="start" size="auto">
+                    <ion-content class="ion-padding">
+                        <FotoUpload @fotoActualizada="actualizarFoto"/>
+                    </ion-content>
+                </ion-popover>
+
                 <button class="warning-button">Actualizar datos</button>
                 <button id="borrarCuenta" class="wrong-button">Borrar cuenta</button>
             </div>
@@ -107,6 +130,16 @@ p{
     font-weight: 800;
 }
 
+ion-popover {
+    --backdrop-opacity: 0.6;
+    --box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.6);
+    --width: 250px;
+}
+
+ion-popover ion-content {
+    --background: rgba(188, 188, 188, 0.25);
+  }
+
 .header{
     display: flex;
     flex-direction: row;
@@ -114,6 +147,11 @@ p{
     justify-content: space-between;
     height: 150px;
     margin-bottom: 20px;
+}
+
+img{
+    height: 150px;
+    width: 150px;
 }
 
 .buttons{
