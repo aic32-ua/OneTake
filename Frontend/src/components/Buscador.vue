@@ -45,7 +45,7 @@ ion-icon {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    padding: 15px 30px 0px 30px;
+    padding: 15px 30px 10px 30px;
 }
 button{
     background-color: rgba(188, 188, 188, 0.25);

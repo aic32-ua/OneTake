@@ -1,5 +1,5 @@
 <script>
-import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon } from '@ionic/vue';
+import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItemDivider, IonItemGroup, IonItem, IonItemSliding, IonItemOption, IonItemOptions } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import { useRoute } from 'vue-router';
 import ClienteAPI from '../ClienteAPI'
@@ -20,7 +20,14 @@ export default{
     IonTitle,
     IonToolbar,
     IonContent,
-    IonIcon
+    IonIcon,
+    IonList,
+    IonItemDivider,
+    IonItemGroup,
+    IonItem,
+    IonItemSliding,
+    IonItemOption,
+    IonItemOptions
 },
     props: {
         tipoLista: String
@@ -65,10 +72,29 @@ export default{
         };
 
         const usuarios = ref([]);
+        const amigosLetra = ref(null)
         const busqueda = ref(null)
 
         const obtenerUsuarios = async () => {
             usuarios.value = await api.verListadoAmigos(usuarioLogeadoStore.idUsu);
+
+            if(tipoLista=="home"){
+                const grupos = {};
+                usuarios.value.forEach(usu => {
+                    const letra = usu.nick.charAt(0).toUpperCase();
+                    if (!grupos[letra]) {
+                    grupos[letra] = [];
+                    }
+                    grupos[letra].push(usu);
+                });
+    
+                const gruposOrdenados = {};
+                Object.keys(grupos).sort().forEach(letra => {
+                    gruposOrdenados[letra] = grupos[letra].sort((a, b) => a.nick.localeCompare(b.nick));
+                });
+    
+                amigosLetra.value = gruposOrdenados
+            }
         };
 
         const buscarUsuarios = async (nombre) => {
@@ -137,29 +163,62 @@ export default{
             }
         });
 
-        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfilUsuario, mostrarVideoUsuario, cerrarModal, cerrarModalVideo, borrarAmigo, mostrarModal, mostrarVideo, videoUrl, idPerfil};
+        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfilUsuario, mostrarVideoUsuario, cerrarModal, cerrarModalVideo, borrarAmigo, mostrarModal, mostrarVideo, videoUrl, idPerfil, amigosLetra};
     }
 }
 </script>
 
 <template>
     <Buscador v-if="tipoLista=='buscar'" @buscarUsuarios="buscarUsuarios"/>
-    <ul v-if="usuarios.length > 0">
-        <Usuario v-for="usuario in usuarios"
-        :nick=usuario.nick
-        :video=usuario.video
-        :id="usuario.id"
-        :peticion="usuario.peticion"
-        :idPeticion="usuario.idPeticion"
-        :tipoLista=tipoLista
-        :foto="usuario.foto"
-        @mostrarVideo="mostrarVideoUsuario"
-        @mostrarPerfil="mostrarPerfilUsuario"
-        @enviarPeticion="enviarPeticion"
-        @aceptarPeticion="aceptarPeticion"
-        @rechazarPeticion="rechazarPeticion"
-        />
-    </ul>
+
+    <ion-list v-if="usuarios.length > 0 && tipoLista=='peticiones' || tipoLista=='buscar'">
+        <ion-item-sliding v-for="(usuario, usuarioIndex) in usuarios" :lines="usuarioIndex === usuarios.length - 1 ? 'none' : 'full'">
+            <ion-item>
+                <Usuario
+                :nick=usuario.nick
+                :video=usuario.video
+                :id="usuario.id"
+                :peticion="usuario.peticion"
+                :idPeticion="usuario.idPeticion"
+                :tipoLista=tipoLista
+                :foto="usuario.foto"
+                @mostrarVideo="mostrarVideoUsuario"
+                @mostrarPerfil="mostrarPerfilUsuario"
+                @enviarPeticion="enviarPeticion"
+                @aceptarPeticion="aceptarPeticion"
+                />
+            </ion-item>
+                
+            <ion-item-options>
+                <ion-item-option v-if="tipoLista=='peticiones'" color="danger" @click="rechazarPeticion(usuario.idPeticion)">Borrar</ion-item-option>
+            </ion-item-options>
+        </ion-item-sliding>
+    </ion-list>
+
+    <ion-list v-if="tipoLista=='home'">
+        <template v-for="(lista, letra) in amigosLetra" :key="letra">
+          <ion-item-divider :id="`divider-${letra}`">
+            {{ letra }}
+          </ion-item-divider>
+          <ion-item-group>
+                <ion-item v-for="(usuario, usuarioIndex) in lista" :lines="usuarioIndex === lista.length - 1 ? 'none' : 'full'">
+                    <Usuario 
+                    :nick=usuario.nick
+                    :video=usuario.video
+                    :id="usuario.id"
+                    :peticion="usuario.peticion"
+                    :idPeticion="usuario.idPeticion"
+                    :tipoLista=tipoLista
+                    :foto="usuario.foto"
+                    @mostrarVideo="mostrarVideoUsuario"
+                    @mostrarPerfil="mostrarPerfilUsuario"
+                    @enviarPeticion="enviarPeticion"
+                    @aceptarPeticion="aceptarPeticion"
+                    />
+                </ion-item>
+          </ion-item-group>
+        </template>
+    </ion-list>
 
     <ion-modal :is-open="mostrarModal">
         <ion-header>
@@ -200,13 +259,12 @@ export default{
 </template>
 
 <style scoped>
-ul{
+ion-list{
     display: flex;
     flex-wrap: wrap;
     width: 100%;
     flex-direction: column;
-    list-style: none;
-    padding-left: 20px;
+    padding: 0;
 }
 
 .message{

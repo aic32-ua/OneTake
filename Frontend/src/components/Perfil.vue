@@ -1,5 +1,5 @@
 <script>
-import { IonAlert, IonPopover, IonContent } from '@ionic/vue';
+import { IonAlert, IonPopover, IonContent, IonHeader, IonModal, IonToolbar, IonButton, IonButtons, IonIcon } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import ClienteAPI from '../ClienteAPI'
 import FotoUpload from './FotoUpload.vue'
@@ -13,6 +13,12 @@ export default{
         IonAlert,
         IonPopover,
         IonContent,
+        IonHeader,
+        IonModal,
+        IonToolbar,
+        IonButton,
+        IonButtons,
+        IonIcon,
         FotoUpload,
         ActualizarDatos
     },
@@ -86,7 +92,18 @@ export default{
             actualizarDatos.value=false;
         };
 
-        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey, actualizarDatos, actualizarDatosUsu};
+        const mostrarVideo = ref(false)
+        const videoUrl = ref(false)
+
+        const mostrarVideoUsuario = async () => {
+            if(!props.id){
+                let video = await api.verVideoUsuario(usuarioLogeadoStore.idUsu)
+                videoUrl.value = URL.createObjectURL(video);
+                mostrarVideo.value = true;
+            }
+        };
+
+        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey, actualizarDatos, actualizarDatosUsu, mostrarVideo, mostrarVideoUsuario, videoUrl};
     }
 }
 </script>
@@ -95,7 +112,7 @@ export default{
     
     <div class="container">
         <div class="header">
-            <img :class="{ 'video-border': usuario.video }" alt="imagen" :src="usuario.foto ? 'http://localhost:3000/usuarios/' + usuario.id + '/foto?key=' + fotoUsuarioKey : 'https://via.placeholder.com/150x150'">
+            <img :class="{ 'video-border': usuario.video }" alt="imagen" @click="mostrarVideoUsuario" :src="usuario.foto ? 'http://localhost:3000/usuarios/' + usuario.id + '/foto?key=' + fotoUsuarioKey : 'https://via.placeholder.com/150x150'">
             <div v-if="!id" class="buttons">
                 <button id="subirFoto" class="ok-button" @click="subirFoto=true">Modificar foto</button>
                 <ion-popover :is-open="subirFoto" trigger="subirFoto" trigger-action="click" @didDismiss="subirFoto = false" side="left" alignment="start" size="auto">
@@ -128,6 +145,22 @@ export default{
         <p>{{usuario.email}}</p>
         <button v-if="!id" class="wrong-button" @click="cerrarSesion">Cerrar sesion</button>
     </div>
+
+    <ion-modal :is-open="mostrarVideo">
+        <ion-header class="modalheader">
+            <ion-toolbar>
+                <ion-buttons slot="end">
+                    <ion-button @click="mostrarVideo=false">
+                        <ion-icon name="close-outline" ></ion-icon>
+                    </ion-button>
+                </ion-buttons>
+            </ion-toolbar>
+        </ion-header>
+        <ion-content>
+            <video autoplay loop :src="videoUrl" style="width: 100%; height: 100%;">
+            </video>
+        </ion-content>
+    </ion-modal>
     
 </template>
 
@@ -142,6 +175,16 @@ p{
     margin-top: 0px;
     margin-bottom: 20;
     font-weight: 800;
+    font-size: 18px;
+}
+
+.modalheader{
+    background: transparent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
 }
 
 ion-popover {
@@ -204,5 +247,10 @@ button{
 
 .wrong-button {
     background-color: rgba(255, 0, 0, 0.75);
+}
+
+ion-modal{
+    --ion-toolbar-border-color: transparent;
+    --ion-toolbar-background: transparent;
 }
 </style>

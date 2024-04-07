@@ -92,9 +92,8 @@ input::placeholder {
   border-radius: 13px;
   padding: 8px 12px;
   color: white;
-  text-decoration: underline;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   background-color: rgba(0, 255, 25, 0.82);
 }
 

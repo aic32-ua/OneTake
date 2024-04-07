@@ -1,8 +1,12 @@
 <script>
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
+import { IonIcon } from '@ionic/vue';
 export default{
     props: ["nick", "video", "id", "tipoLista", "peticion" ,"idPeticion", "foto"],
-    emits: ['mostrarPerfil', 'mostrarVideo', 'enviarPeticion', 'aceptarPeticion', 'rechazarPeticion'],
+    emits: ['mostrarPerfil', 'mostrarVideo', 'enviarPeticion', 'aceptarPeticion'],
+    components:{
+        IonIcon
+    },
     setup(props, { emit }) {
         const usuarioLogeadoStore = useUsuarioLogeadoStore();
 
@@ -20,32 +24,24 @@ export default{
         const aceptarPeticion = () => {
             emit("aceptarPeticion", props.idPeticion);
         };
-        const rechazarPeticion = () => {
-            emit("rechazarPeticion", props.idPeticion);
-        };
 
-        return { usuarioLogeadoStore, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfil, mostrarVideo};
+        return { usuarioLogeadoStore, enviarPeticion, aceptarPeticion, mostrarPerfil, mostrarVideo};
     }
 }
 
 </script>
 
 <template>
-    
-    <li :id="id">
-        <div class="container">
-            <div class="usuario">
-                <img :class="{ 'video-border': video }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/65x65'" @click="mostrarVideo">
-                <p @click="mostrarPerfil">{{nick}}</p>
-            </div>
-            <button class="aceptar-button" v-if="tipoLista=='buscar' && !peticion" @click="enviarPeticion">Añadir amigo</button>
-            <div v-if="tipoLista=='peticiones'" class="contenedorBotones">
-                <button class="aceptar-button"  @click="aceptarPeticion">Aceptar</button>
-                <button class="rechazar-button" @click="rechazarPeticion">Rechazar</button>
-            </div>
+    <div class="container">
+        <div class="usuario">
+            <img :class="{ 'video-border': video && tipoLista=='home' }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/65x65'" @click="mostrarVideo">
+            <p @click="mostrarPerfil">{{nick}}</p>
         </div>
-    </li>
-    
+        <button v-if="tipoLista=='buscar' && !peticion" @click="enviarPeticion">Añadir amigo</button>
+        <button v-if="tipoLista=='peticiones'" class="iconButton" @click="aceptarPeticion">
+            <ion-icon name="checkmark-sharp"></ion-icon>
+        </button>
+    </div>
 </template>
 
 <style scoped>
@@ -56,7 +52,12 @@ export default{
 
 p{
     cursor: pointer;
-    font-size: 20px;
+    font-size: 18px;
+    align-content: center;
+}
+
+ion-icon{
+    font-size: 22px;
 }
 
 .container{
@@ -64,16 +65,8 @@ p{
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding-right: 15px;
-    height: 80px
-}
-
-.contenedorBotones{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 50%;
+    height: 80px;
+    width: 100vw;
 }
 
 img{
@@ -83,21 +76,19 @@ img{
     margin-right: 15px;
 }
 
+.iconButton{
+    height: 38px;
+    padding: 8px 8px;
+}
+
 button{
     height: 40px;
     border-radius: 13px;
     padding: 8px 12px;
     color: white;
     cursor: pointer;
-    font-size: 12px;
-}
-
-.aceptar-button {
-  background-color: rgba(0, 255, 25, 0.82);
-}
-
-.rechazar-button {
-    background-color: rgba(255, 0, 0, 0.75);
+    font-size: 14px;
+    background-color: rgba(0, 255, 25, 0.82);
 }
 
 .video-border {
