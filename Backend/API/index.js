@@ -417,7 +417,7 @@ app.get('/usuarios/:id',async function(req,resp) {
         })
     }
 
-    let item = await Usuario.findByPk(id, {attributes: ['email', 'nick', 'video']})
+    let item = await Usuario.findByPk(id, {attributes: ['email', 'nick', 'video', 'foto']})
     if(!item){
         return resp.status(404).send({
             code:3,
@@ -425,7 +425,7 @@ app.get('/usuarios/:id',async function(req,resp) {
         })
     }
 
-    resp.status(200).send({email: item.email, nick: item.nick})
+    resp.status(200).send(item)
 })
 
 //6. buscar usuario por nick paginacion?
@@ -835,6 +835,7 @@ app.get('/usuarios/:id/video',async function(req,resp) {
                 message: "El video no existe"
             })
         } else {
+            resp.set('Content-Type', 'video/mp4');
             resp.sendFile(videoPath);
         }
     });
@@ -929,13 +930,14 @@ app.patch('/usuarios/:id/foto', uploadFoto.single('foto'), async function(req, r
         await eliminarFoto(await Usuario.findByPk(idParam, {attributes: ['foto']}).foto) //es necesario eliminar la foto ya que si tienen diferente formato no la va a sobreescribir
         await Usuario.update({ foto: req.file.path }, { where: { id: idParam } });
 
-        resp.json({ message: 'Foto de perfil subida correctamente.' });
+        resp.status(200).send()
     } catch (error) {
         console.error("Error al subir la foto:", error);
         resp.status(500).json({ error: 'Error al subir la foto.' });
     }
 });
 
+//17. Ver foto perfil
 app.get('/usuarios/:id/foto', async function(req, resp) {
     let idParam = parseInt(req.params.id);
     if (isNaN(idParam)) {

@@ -173,7 +173,7 @@ button{
     padding: 8px 12px;
     color: white;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 15px;
 }
 
 .ok-button {

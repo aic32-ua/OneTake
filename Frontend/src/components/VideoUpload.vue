@@ -1,12 +1,15 @@
 <script>
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
+import { usePopOverStore } from '../stores/PopOverStore';
 import ClienteAPI from '../ClienteAPI.js'
 export default{
+    emits: ['videoSubido'],
     data: function() {
         return {
             api: new ClienteAPI(),
             videoFile: null,
-            usuarioLogeadoStore: useUsuarioLogeadoStore()
+            usuarioLogeadoStore: useUsuarioLogeadoStore(),
+            popOverStore: usePopOverStore()
         };
     },
     methods: {
@@ -15,9 +18,11 @@ export default{
         },
         async uploadVideo() {
             if(this.videoFile != null){
+                this.popOverStore.abrirPopOver()
                 await this.api.subirVideo(this.usuarioLogeadoStore.idUsu, this.videoFile);
                 document.getElementById('video').value = '';
                 this.videoFile = null;
+                this.popOverStore.cerrarPopOver()
             }
             else{
                 alert("Por favor, seleccione un video para subir.");

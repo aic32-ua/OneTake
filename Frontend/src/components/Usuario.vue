@@ -35,7 +35,7 @@ export default{
     <li :id="id">
         <div class="container">
             <div class="usuario">
-                <img :class="{ 'video-border': video }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/50x50'" @click="mostrarVideo">
+                <img :class="{ 'video-border': video }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/65x65'" @click="mostrarVideo">
                 <p @click="mostrarPerfil">{{nick}}</p>
             </div>
             <button class="aceptar-button" v-if="tipoLista=='buscar' && !peticion" @click="enviarPeticion">Añadir amigo</button>
@@ -56,6 +56,7 @@ export default{
 
 p{
     cursor: pointer;
+    font-size: 20px;
 }
 
 .container{
@@ -64,7 +65,7 @@ p{
     align-items: center;
     justify-content: space-between;
     padding-right: 15px;
-    height: 60px
+    height: 80px
 }
 
 .contenedorBotones{
@@ -76,10 +77,10 @@ p{
 }
 
 img{
-    height: 50px;
-    width: 50px;
-    border-radius: 25px;
-    margin-right: 10px;
+    height: 65px;
+    width: 65px;
+    border-radius: 35px;
+    margin-right: 15px;
 }
 
 button{

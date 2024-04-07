@@ -26,10 +26,11 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 
 import { addIcons } from 'ionicons';
-import {search, searchSharp,homeSharp, personAdd, film } from 'ionicons/icons';
+import {searchSharp, closeOutline } from 'ionicons/icons';
 
 addIcons({
   'search-sharp': searchSharp,
+  'close-outline': closeOutline,
 });
 
 const app = createApp(App)

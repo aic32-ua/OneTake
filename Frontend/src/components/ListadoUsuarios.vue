@@ -1,5 +1,5 @@
 <script>
-import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar,IonContent } from '@ionic/vue';
+import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import { useRoute } from 'vue-router';
 import ClienteAPI from '../ClienteAPI'
@@ -19,7 +19,8 @@ export default{
     IonHeader,
     IonTitle,
     IonToolbar,
-    IonContent
+    IonContent,
+    IonIcon
 },
     props: {
         tipoLista: String
@@ -43,10 +44,12 @@ export default{
         };
 
         const mostrarVideoUsuario = async (idUsuario) => {
-            let video = await api.verVideoUsuario(idUsuario)
-            videoUrl.value = URL.createObjectURL(video);
-            idPerfil.value = idUsuario
-            mostrarVideo.value = true;
+            if(tipoLista=="home"){
+                let video = await api.verVideoUsuario(idUsuario)
+                videoUrl.value = URL.createObjectURL(video);
+                idPerfil.value = idUsuario
+                mostrarVideo.value = true;
+            }
         };
 
         const cerrarModal = () => {
@@ -163,7 +166,9 @@ export default{
             <ion-toolbar>
             <ion-title>Perfil</ion-title>
             <ion-buttons slot="end">
-                <ion-button @click="cerrarModal">Cerrar</ion-button>
+                <ion-button @click="cerrarModal">
+                    <ion-icon name="close-outline"></ion-icon>
+                </ion-button>
             </ion-buttons>
             </ion-toolbar>
         </ion-header>
@@ -174,12 +179,13 @@ export default{
     </ion-modal>
 
     <ion-modal :is-open="mostrarVideo">
-        <ion-header>
+        <ion-header class="header">
             <ion-toolbar>
-            <ion-title>Video</ion-title>
-            <ion-buttons slot="end">
-                <ion-button @click="cerrarModalVideo">Cerrar</ion-button>
-            </ion-buttons>
+                <ion-buttons slot="end">
+                    <ion-button @click="cerrarModalVideo">
+                        <ion-icon name="close-outline" ></ion-icon>
+                    </ion-button>
+                </ion-buttons>
             </ion-toolbar>
         </ion-header>
         <ion-content>
@@ -208,5 +214,19 @@ ul{
     margin-right: 30px;
     margin-top: 20px;
     color: #BCBCBC;
+}
+
+.header{
+    background: transparent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+}
+
+ion-modal{
+    --ion-toolbar-border-color: transparent;
+    --ion-toolbar-background: transparent;
 }
 </style>
