@@ -7,12 +7,12 @@
           <ion-icon src="/resources/home.svg" color="white"></ion-icon>
         </ion-tab-button>
 
-        <ion-tab-button id="publicarVideo" tab="publicar">
+        <ion-tab-button id="publicarVideo" tab="publicar" @click="subirVideo=true">
           <ion-icon src="/resources/more.svg"></ion-icon>
         </ion-tab-button>
-        <ion-popover :is-open="popOverStore.abierto" trigger="publicarVideo" trigger-action="click" @didDismiss="popOverStore.cerrarPopOver" side="top" alignment="center" size="auto">
+        <ion-popover :is-open="subirVideo" trigger="publicarVideo" trigger-action="click" @didDismiss="subirVideo=false" side="top" alignment="center" size="auto">
             <ion-content class="ion-padding">
-                <VideoUpload/>
+                <VideoUpload @videoSubido="subirVideo=false"/>
             </ion-content>
         </ion-popover>
 
@@ -27,18 +27,18 @@
 <script setup lang="ts">
 import { IonTabBar, IonTabButton, IonTabs, IonContent, IonPopover, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
 import { useRouter } from 'vue-router';
-import { usePopOverStore } from '../stores/PopOverStore';
-import { onMounted, computed, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import VideoUpload from '@/components/VideoUpload.vue';
 
 const router = useRouter();
-const popOverStore = usePopOverStore();
 
 onMounted(() => {
   if (!localStorage.getItem('token') && router.currentRoute.value.path !== '/login') {
     router.push('/login');
   }
 });
+
+const subirVideo = ref(false)
 
 </script>
 <style scoped>

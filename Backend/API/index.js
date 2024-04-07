@@ -316,7 +316,7 @@ app.put('/usuarios/:id',async function(req,resp) {
     }
 
     let usu = req.body
-    if(!(usu.email && usu.password && usu.nick)){
+    if(!(usu.email && usu.nick)){
         return resp.status(400).send({
             code:1,
             message: "Faltan datos"
@@ -347,7 +347,7 @@ app.put('/usuarios/:id',async function(req,resp) {
     }
 
     try{
-        await Usuario.update({email: usu.email, password: passwordHash.generate(usu.password), nick: usu.nick}, {where: { id: idParam }})
+        await Usuario.update({email: usu.email, nick: usu.nick}, {where: { id: idParam }})
         resp.setHeader('Location', 'http://localhost:3000/usuarios/' + idParam)
         resp.status(200).send(await Usuario.findOne({where: { email: usu.email }}))
     }

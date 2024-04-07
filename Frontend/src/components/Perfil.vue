@@ -3,15 +3,18 @@ import { IonAlert, IonPopover, IonContent } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import ClienteAPI from '../ClienteAPI'
 import FotoUpload from './FotoUpload.vue'
+import actualizarDatos from './ActualizarDatos.vue'
 import { ref,watch } from 'vue'
 import { useRouter } from 'vue-router';
+import ActualizarDatos from './ActualizarDatos.vue';
 
 export default{
     components: {
         IonAlert,
         IonPopover,
         IonContent,
-        FotoUpload
+        FotoUpload,
+        ActualizarDatos
     },
     props: ["id"],
     emits: ['borrarAmigo'],
@@ -70,6 +73,7 @@ export default{
         fotoUsuarioKey.value = new Date().getTime();
 
         const subirFoto = ref(false)
+        const actualizarDatos = ref(false)
 
         const actualizarFoto = async () => {
             await obtenerUsuario();
@@ -77,7 +81,12 @@ export default{
             fotoUsuarioKey.value = new Date().getTime();
         };
 
-        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey};
+        const actualizarDatosUsu = async () => {
+            await obtenerUsuario();
+            actualizarDatos.value=false;
+        };
+
+        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey, actualizarDatos, actualizarDatosUsu};
     }
 }
 </script>
@@ -95,8 +104,21 @@ export default{
                     </ion-content>
                 </ion-popover>
 
-                <button class="warning-button">Actualizar datos</button>
+                <button id="actualizarDatos" class="warning-button" @click="actualizarDatos=true">Actualizar datos</button>
+                <ion-popover class="actualizarDatosPop" :is-open="actualizarDatos" trigger="actualizarDatos" trigger-action="click" @didDismiss="actualizarDatos = false" side="left" alignment="start" size="auto">
+                    <ion-content class="ion-padding">
+                        <ActualizarDatos @datosActualizados="actualizarDatosUsu"/>
+                    </ion-content>
+                </ion-popover>
+
                 <button id="borrarCuenta" class="wrong-button">Borrar cuenta</button>
+                <ion-alert v-if="!id"
+                    trigger="borrarCuenta"
+                    header="Borrar cuenta"
+                    message="¿Estas seguro de que quieres borrar tu cuenta? Esta accion es irreversible."
+                    @ionAlertDidDismiss="alertaCerrada"
+                    :buttons="botonesAlerta"
+                ></ion-alert>
             </div>
             <div v-if="id" class="buttons">
                 <button class="wrong-button" @click="borrarAmigo">Borrar amigo</button>
@@ -105,14 +127,6 @@ export default{
         <p>{{usuario.nick}}</p>
         <p>{{usuario.email}}</p>
         <button v-if="!id" class="wrong-button" @click="cerrarSesion">Cerrar sesion</button>
-
-        <ion-alert v-if="!id"
-            trigger="borrarCuenta"
-            header="Borrar cuenta"
-            message="¿Estas seguro de que quieres borrar tu cuenta? Esta accion es irreversible."
-            @ionAlertDidDismiss="alertaCerrada"
-            :buttons="botonesAlerta"
-        ></ion-alert>
     </div>
     
 </template>
@@ -138,6 +152,10 @@ ion-popover {
 
 ion-popover ion-content {
     --background: rgba(188, 188, 188, 0.25);
+}
+
+.actualizarDatosPop{
+    --width: 70vw;
 }
 
 .header{

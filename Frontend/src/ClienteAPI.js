@@ -75,10 +75,6 @@ class ClienteAPI {
                 body: JSON.stringify(usuario)
             });
 
-            if (!response.ok) {
-                throw new Error('Error al actualizar datos de usuario');
-            }
-
             return await response.json();
         } catch (error) {
             console.error('Error al actualizar datos de usuario:', error.message);
