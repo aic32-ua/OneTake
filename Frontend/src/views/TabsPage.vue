@@ -4,7 +4,7 @@
       <ion-router-outlet></ion-router-outlet>
       <ion-tab-bar slot="bottom">
         <ion-tab-button tab="home" href="/tabs/home">
-          <ion-icon src="/resources/home.svg" color="white"></ion-icon>
+          <ion-icon :src="isActiveTab('home') ? '/resources/homeSelected.svg' : '/resources/home.svg'" color="white"></ion-icon>
         </ion-tab-button>
 
         <ion-tab-button id="publicarVideo" tab="publicar" @click="subirVideo=true">
@@ -17,7 +17,7 @@
         </ion-popover>
 
         <ion-tab-button tab="social" href="/tabs/social">
-          <ion-icon src="/resources/invite.svg"></ion-icon>
+          <ion-icon :src="isActiveTab('social') ? '/resources/inviteSelected.svg' : '/resources/invite.svg'"></ion-icon>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
@@ -37,6 +37,10 @@ onMounted(() => {
     router.push('/login');
   }
 });
+
+const isActiveTab = (tabName: string) => {
+  return router.currentRoute.value.path.startsWith("/tabs/" + tabName);
+};
 
 const subirVideo = ref(false)
 
