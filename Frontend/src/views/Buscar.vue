@@ -1,12 +1,12 @@
 <template>
   <ion-page>
     <ion-content :fullscreen="true">
-      <ListadoUsuarios tipoLista="buscar"/>
+      <ListadoBusqueda />
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/vue';
-import ListadoUsuarios from '@/components/ListadoUsuarios.vue';
+import { IonPage, IonContent } from '@ionic/vue';
+import ListadoBusqueda from '@/components/ListadoBusqueda.vue';
 </script>
