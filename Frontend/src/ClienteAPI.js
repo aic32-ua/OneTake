@@ -1,6 +1,10 @@
+import {useUsuarioLogeadoStore} from './stores/UsuarioLogeadoStore.js'
+
 class ClienteAPI {
 
     baseURL = "http://localhost:3000"
+
+    usuarioLogeadoStore = useUsuarioLogeadoStore(); 
 
     async subirVideo(idUsuario, video) {
         try {
@@ -17,7 +21,12 @@ class ClienteAPI {
             });
 
             if (!response.ok) {
-                throw new Error('Error al subir el video');
+                if (response.status === 401) {
+                    this.usuarioLogeadoStore.cerrarSesion();
+                }
+                else{
+                    throw new Error('Error al subir el video');
+                }      
             }
 
             return await response.json();
@@ -75,6 +84,10 @@ class ClienteAPI {
                 body: JSON.stringify(usuario)
             });
 
+            if (!response.ok && response.status === 401) {
+                this.usuarioLogeadoStore.cerrarSesion();
+            }
+
             return await response.json();
         } catch (error) {
             console.error('Error al actualizar datos de usuario:', error.message);
@@ -91,6 +104,10 @@ class ClienteAPI {
                     'Authorization': 'Bearer ' + localStorage.getItem('token'),
                 },
             });
+
+            if (!response.ok && response.status === 401) {
+                this.usuarioLogeadoStore.cerrarSesion();
+            }
 
             return response.status;
         } catch (error) {
@@ -125,6 +142,10 @@ class ClienteAPI {
                 },
             });
 
+            if (!response.ok && response.status === 401) {
+                this.usuarioLogeadoStore.cerrarSesion();
+            }
+
             return await response.json();
         } catch (error) {
             console.error('Error al buscar usuario por nick:', error.message);
@@ -143,7 +164,12 @@ class ClienteAPI {
             });
 
             if (!response.ok) {
-                throw new Error('Error al enviar petición de amistad: ' + response.message);
+                if (response.status === 401) {
+                    this.usuarioLogeadoStore.cerrarSesion();
+                }
+                else{
+                    throw new Error('Error al subir el video');
+                }      
             }
 
             return await response.json();
@@ -164,7 +190,12 @@ class ClienteAPI {
             });
 
             if (!response.ok) {
-                throw new Error('Error al ver listado de peticiones de amistad de usuario');
+                if (response.status === 401) {
+                    this.usuarioLogeadoStore.cerrarSesion();
+                }
+                else{
+                    throw new Error('Error al subir el video');
+                }      
             }
 
             return await response.json();
@@ -184,6 +215,10 @@ class ClienteAPI {
                 },
             });
 
+            if (!response.ok && response.status === 401) {
+                this.usuarioLogeadoStore.cerrarSesion();
+            }
+
             return response.status;
         } catch (error) {
             console.error('Error al aceptar petición de amistad:', error.message);
@@ -201,6 +236,10 @@ class ClienteAPI {
                 },
             });
 
+            if (!response.ok && response.status === 401) {
+                this.usuarioLogeadoStore.cerrarSesion();
+            }
+
             return response.status;
         } catch (error) {
             console.error('Error al rechazar petición de amistad:', error.message);
@@ -217,6 +256,10 @@ class ClienteAPI {
                     'Authorization': 'Bearer ' + localStorage.getItem('token'),
                 },
             });
+
+            if (!response.ok && response.status === 401) {
+                this.usuarioLogeadoStore.cerrarSesion();
+            }
 
             return response.status;
         } catch (error) {
@@ -236,7 +279,12 @@ class ClienteAPI {
             });
 
             if (!response.ok) {
-                throw new Error('Error al ver listado de amigos');
+                if (response.status === 401) {
+                    this.usuarioLogeadoStore.cerrarSesion();
+                }
+                else{
+                    throw new Error('Error al subir el video');
+                }      
             }
 
             return await response.json();
@@ -257,7 +305,12 @@ class ClienteAPI {
             });
 
             if (!response.ok) {
-                throw new Error('Error al ver video de usuario');
+                if (response.status === 401) {
+                    this.usuarioLogeadoStore.cerrarSesion();
+                }
+                else{
+                    throw new Error('Error al subir el video');
+                }      
             }
 
             return await response.blob();
@@ -282,7 +335,12 @@ class ClienteAPI {
             });
 
             if (!response.ok) {
-                throw new Error('Error al publicar video de usuario');
+                if (response.status === 401) {
+                    this.usuarioLogeadoStore.cerrarSesion();
+                }
+                else{
+                    throw new Error('Error al subir el video');
+                }      
             }
 
             return await response.json();
@@ -307,7 +365,12 @@ class ClienteAPI {
             });
     
             if (!response.ok) {
-                throw new Error('Error al subir la foto');
+                if (response.status === 401) {
+                    this.usuarioLogeadoStore.cerrarSesion();
+                }
+                else{
+                    throw new Error('Error al subir el video');
+                }      
             }
     
             return await response;

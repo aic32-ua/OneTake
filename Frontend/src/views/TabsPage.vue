@@ -27,14 +27,23 @@
 <script setup lang="ts">
 import { IonTabBar, IonTabButton, IonTabs, IonContent, IonPopover, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
 import { useRouter } from 'vue-router';
-import { onMounted, ref } from 'vue';
+import { watch, onMounted, ref } from 'vue';
 import VideoUpload from '@/components/VideoUpload.vue';
+import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 
 const router = useRouter();
 
+const usuarioLogeadoStore = useUsuarioLogeadoStore(); 
+
 onMounted(() => {
-  if (!localStorage.getItem('token') && router.currentRoute.value.path !== '/login') {
-    router.push('/login');
+  if (!localStorage.getItem('token')) {
+    router.replace({ path: '/login' });
+  }
+});
+
+watch(() => usuarioLogeadoStore.token , (newValue) => {
+  if (newValue === null) {
+    router.replace({ path: '/login' });
   }
 });
 
