@@ -431,6 +431,10 @@ app.get('/usuarios/:id',async function(req,resp) {
 //6. buscar usuario por nick paginacion?
 app.get('/usuarios/buscar/:nick',async function(req,resp) {
 
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.per_page) || 10;
+    const offset = (page - 1) * perPage;
+
     const authHeader = req.headers["authorization"]
     let retCode;
     if(!authHeader){
@@ -448,9 +452,12 @@ app.get('/usuarios/buscar/:nick',async function(req,resp) {
 
     let nickParam = req.params.nick
     let usuarios = await Usuario.findAll({where: { 
-        id: { [Sequelize.Op.not]: retCode.id },
-        nick: { [Sequelize.Op.like]: '%' + nickParam + '%' }
-    }});
+            id: { [Sequelize.Op.not]: retCode.id },
+            nick: { [Sequelize.Op.like]: '%' + nickParam + '%' }
+        },
+        offset: offset,
+        limit: perPage
+    });
     const userId = retCode.id;
 
     for (const usuario of usuarios) {
@@ -562,6 +569,11 @@ app.post('/usuarios/:idEmisor/peticiones/:idReceptor',async function(req,resp) {
 
 //9. Ver listado peticiones amistad usuario
 app.get('/usuarios/:id/peticiones',async function(req,resp) {
+
+    const page = parseInt(req.query.page) || 1;
+    const perPage = parseInt(req.query.per_page) || 10;
+    const offset = (page - 1) * perPage;
+
     let idParam = parseInt(req.params.id)
     if(isNaN(idParam)){
         return resp.status(400).send({
@@ -593,7 +605,7 @@ app.get('/usuarios/:id/peticiones',async function(req,resp) {
         })
     }
 
-    resp.status(200).send(await PeticionAmistad.findAll({where: { id_receptor: idParam }}))
+    resp.status(200).send(await PeticionAmistad.findAll({where: { id_receptor: idParam }, offset: offset, limit: perPage}))
 })
 
 //10. Aceptar peticion amistad

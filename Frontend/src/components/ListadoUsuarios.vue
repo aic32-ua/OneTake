@@ -1,5 +1,5 @@
 <script>
-import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItemDivider, IonItemGroup, IonItem, IonItemSliding, IonItemOption, IonItemOptions } from '@ionic/vue';
+import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItemDivider, IonItemGroup, IonItem, IonItemSliding, IonItemOption, IonItemOptions, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import { useRoute } from 'vue-router';
 import ClienteAPI from '../ClienteAPI'
@@ -27,7 +27,9 @@ export default{
     IonItem,
     IonItemSliding,
     IonItemOption,
-    IonItemOptions
+    IonItemOptions,
+    IonInfiniteScroll,
+    IonInfiniteScrollContent
 },
     props: {
         tipoLista: String
@@ -44,6 +46,8 @@ export default{
         const mostrarVideo = ref(false)
         const mostrarModal = ref(false)
         const idPerfil = ref(null)
+
+        let page = 1;
 
         const mostrarPerfilUsuario = async (idUsuario) => {
             idPerfil.value = idUsuario
@@ -98,8 +102,12 @@ export default{
         };
 
         const buscarUsuarios = async (nombre) => {
-            usuarios.value = await api.buscarUsuarioPorNick(nombre);
+            usuarios.value = await api.buscarUsuarioPorNick(nombre,1);
             busqueda.value = nombre //guardo el criterio de la ultima busqueda ya que si envias una peticion hay que recargar el listado filtrando de nuevo por ese criterio
+        };
+
+        const buscarMasUsuarios = async () => {
+            usuarios.value = usuarios.value.concat(await api.buscarUsuarioPorNick(busqueda.value,page));
         };
 
         const enviarPeticion = async (id) => {
@@ -107,9 +115,11 @@ export default{
             buscarUsuarios(busqueda.value)
         };
 
-        const obtenerPeticiones = async () => {
-            const peticiones = await api.verListadoPeticionesAmistadUsuario(usuarioLogeadoStore.idUsu);
-            usuarios.value = [];
+        const obtenerPeticiones = async (page) => {
+            const peticiones = await api.verListadoPeticionesAmistadUsuario(usuarioLogeadoStore.idUsu,page);
+            if(page==1){
+                usuarios.value = [];
+            }
             for (const peticion of peticiones) {
                 const usuario = await api.obtenerInformacionUsuario(peticion.id_emisor);
                 usuario.idPeticion = peticion.id;
@@ -119,12 +129,12 @@ export default{
 
         const aceptarPeticion = async (id) => {
             await api.aceptarPeticionAmistad(id)
-            obtenerPeticiones();
+            obtenerPeticiones(1);
         };
 
         const rechazarPeticion = async (id) => {
             await api.rechazarPeticionAmistad(id)
-            obtenerPeticiones();
+            obtenerPeticiones(1);
         };
 
         const borrarAmigo = async (id) => {
@@ -139,7 +149,7 @@ export default{
             obtenerUsuarios();
         }
         else if(tipoLista=="peticiones"){
-            obtenerPeticiones();
+            obtenerPeticiones(1);
         }
 
         watch(usuarioLogeadoStore, () => {
@@ -147,7 +157,7 @@ export default{
                 obtenerUsuarios();
             }
             else if(tipoLista=="peticiones"){
-                obtenerPeticiones();
+                obtenerPeticiones(1);
             }
             else if(tipoLista=="buscar"){
                 usuarios.value=[];
@@ -159,11 +169,21 @@ export default{
                 obtenerUsuarios();   
             }
             if (newPath === '/tabs/social/peticiones' && tipoLista=="peticiones") {
-                obtenerPeticiones();   
+                obtenerPeticiones(1);   
             }
         });
 
-        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfilUsuario, mostrarVideoUsuario, cerrarModal, cerrarModalVideo, borrarAmigo, mostrarModal, mostrarVideo, videoUrl, idPerfil, amigosLetra};
+        const ionInfinite = () => {
+            page++;
+            if(tipoLista=="peticiones"){
+                obtenerPeticiones(page)
+            }
+            else if(tipoLista=="buscar"){ 
+                buscarMasUsuarios()
+            }
+        };
+
+        return { usuarios, tipoLista, buscarUsuarios, enviarPeticion, aceptarPeticion, rechazarPeticion, mostrarPerfilUsuario, mostrarVideoUsuario, cerrarModal, cerrarModalVideo, borrarAmigo, mostrarModal, mostrarVideo, videoUrl, idPerfil, amigosLetra, ionInfinite};
     }
 }
 </script>
@@ -194,6 +214,9 @@ export default{
             </ion-item-options>
         </ion-item-sliding>
     </ion-list>
+    <ion-infinite-scroll @ionInfinite="ionInfinite" v-if="usuarios.length > 0 && usuarios.length%10===0 && (tipoLista=='peticiones' || tipoLista=='buscar')">
+      <ion-infinite-scroll-content v-if="usuarios.length > 0 && usuarios.length%10===0 && (tipoLista=='peticiones' || tipoLista=='buscar')"></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
 
     <ion-list v-if="tipoLista=='home'">
         <template v-for="(lista, letra) in amigosLetra" :key="letra">

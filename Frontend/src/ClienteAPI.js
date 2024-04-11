@@ -115,9 +115,9 @@ class ClienteAPI {
         }
     }
 
-    async buscarUsuarioPorNick(nick) {
+    async buscarUsuarioPorNick(nick, page) {
         try {
-            const url = `${this.baseURL}/usuarios/buscar/${nick}`;
+            const url = `${this.baseURL}/usuarios/buscar/${nick}?page=${page}&per_page=10`;
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -153,9 +153,9 @@ class ClienteAPI {
         }
     }
 
-    async verListadoPeticionesAmistadUsuario(id) {
+    async verListadoPeticionesAmistadUsuario(id, page) {
         try {
-            const url = `${this.baseURL}/usuarios/${id}/peticiones`;
+            const url = `${this.baseURL}/usuarios/${id}/peticiones?page=${page}&per_page=10`;
             const response = await fetch(url,{
                 method: 'GET',
                 headers: {
