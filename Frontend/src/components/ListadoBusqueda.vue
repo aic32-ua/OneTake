@@ -55,7 +55,7 @@ export default{
 
         const enviarPeticion = async (id) => {
             await api.enviarPeticionAmistad(usuarioLogeadoStore.idUsu, id)
-            buscarUsuarios(busqueda.value)
+            usuarios.value.find(usuario => usuario.id === id).peticion = true;
         };
 
         const borrarAmigo = async (id) => {

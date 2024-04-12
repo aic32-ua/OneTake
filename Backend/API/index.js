@@ -839,6 +839,16 @@ app.get('/usuarios/:id/video',async function(req,resp) {
         })
     }
 
+    idSesion = obtenerIdToken(authHeader.split(' ')[1]).id
+    usuarioSesion = await Usuario.findByPk(idSesion)
+
+    if(!usuarioSesion.video){
+        return resp.status(401).send({
+            code: 4,
+            message: "Tienes que subir un video para poder ver los de tus amigos"
+        })
+    }
+
     const videoPath = path.join('/mnt/volumen/procesados', idParam + '.mp4');
     fs.access(videoPath, fs.constants.F_OK, (err) => {
         if (err) {

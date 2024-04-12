@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <ion-header>
+    <ion-header id="header">
       <ion-toolbar>
         <ion-title>OneTake</ion-title>
       </ion-toolbar>

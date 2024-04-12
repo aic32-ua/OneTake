@@ -5,7 +5,7 @@ import ClienteAPI from '../ClienteAPI'
 import FotoUpload from './FotoUpload.vue'
 import actualizarDatos from './ActualizarDatos.vue'
 import { ref,watch } from 'vue'
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import ActualizarDatos from './ActualizarDatos.vue';
 
 export default{
@@ -27,6 +27,7 @@ export default{
     setup(props, { emit }){
         const usuarioLogeadoStore = useUsuarioLogeadoStore(); 
         const api = new ClienteAPI();
+        const route = useRoute()
         const router = useRouter()
 
         const botonesAlerta = [
@@ -40,6 +41,15 @@ export default{
             }
         ];
 
+        const fotoUsuarioKey = ref(null) //esta clave solo sirve para tener un valor variable en la url de la foto y poder recargarla al cambiar de foto
+        fotoUsuarioKey.value = new Date().getTime();
+
+        const subirFoto = ref(false)
+        const actualizarDatos = ref(false)
+
+        const mostrarVideo = ref(false)
+        const videoUrl = ref(false)
+
         const usuario = ref({})
 
         const obtenerUsuario = async () => {
@@ -52,8 +62,6 @@ export default{
                 usuario.value.id = props.id
             }
         };
-
-        obtenerUsuario();
 
         const cerrarSesion = () => {
             usuarioLogeadoStore.cerrarSesion;
@@ -71,16 +79,6 @@ export default{
             }
         };
 
-        watch(usuarioLogeadoStore, () => {
-            obtenerUsuario();
-        });
-
-        const fotoUsuarioKey = ref(null) //esta clave solo sirve para tener un valor variable en la url de la foto y poder recargarla al cambiar de foto
-        fotoUsuarioKey.value = new Date().getTime();
-
-        const subirFoto = ref(false)
-        const actualizarDatos = ref(false)
-
         const actualizarFoto = async () => {
             await obtenerUsuario();
             subirFoto.value=false;
@@ -92,16 +90,25 @@ export default{
             actualizarDatos.value=false;
         };
 
-        const mostrarVideo = ref(false)
-        const videoUrl = ref(false)
-
         const mostrarVideoUsuario = async () => {
-            if(!props.id){
+            if(!props.id && usuario.value.video){
                 let video = await api.verVideoUsuario(usuarioLogeadoStore.idUsu)
                 videoUrl.value = URL.createObjectURL(video);
                 mostrarVideo.value = true;
             }
         };
+
+        watch(usuarioLogeadoStore, () => {
+            obtenerUsuario();
+        });
+
+        watch(() => route.path, (newPath, oldPath) => {
+            if (newPath == '/tabs/social/perfil') {
+                obtenerUsuario();
+            }
+        });
+
+        obtenerUsuario();
 
         return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey, actualizarDatos, actualizarDatosUsu, mostrarVideo, mostrarVideoUsuario, videoUrl};
     }

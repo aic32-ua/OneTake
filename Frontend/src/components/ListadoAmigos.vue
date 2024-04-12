@@ -1,5 +1,5 @@
 <script>
-import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItemDivider, IonItemGroup, IonItem } from '@ionic/vue';
+import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItemDivider, IonItemGroup, IonItem , IonToast} from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import { useRoute } from 'vue-router';
 import ClienteAPI from '../ClienteAPI'
@@ -23,6 +23,7 @@ export default{
     IonItemDivider,
     IonItemGroup,
     IonItem,
+    IonToast
 },
     setup(){
         const route = useRoute();
@@ -33,6 +34,8 @@ export default{
         const mostrarVideo = ref(false)
         const mostrarModal = ref(false)
         const idPerfil = ref(null)
+        const mostrarError = ref(false)
+        const error = ref('')
 
         const usuarios = ref([]);
         const amigosLetra = ref(null)
@@ -44,9 +47,15 @@ export default{
 
         const mostrarVideoUsuario = async (idUsuario) => {
             let video = await api.verVideoUsuario(idUsuario)
-            videoUrl.value = URL.createObjectURL(video);
-            idPerfil.value = idUsuario
-            mostrarVideo.value = true;
+            if(video!=null && video instanceof Blob){
+                videoUrl.value = URL.createObjectURL(video);
+                idPerfil.value = idUsuario
+                mostrarVideo.value = true;
+            }
+            else if(typeof video === 'string'){
+                error.value = video;
+                mostrarError.value = true;
+            }
         };
 
         const cerrarModal = () => {
@@ -95,11 +104,12 @@ export default{
 
         watch(() => route.path, (newPath, oldPath) => {
             if (newPath === '/tabs/home') {
+                console.log("entro hoime")
                 obtenerUsuarios();   
             }
         });
 
-        return { usuarios, mostrarPerfilUsuario, borrarAmigo, mostrarVideoUsuario, cerrarModal, cerrarModalVideo, mostrarModal, mostrarVideo, videoUrl, idPerfil, amigosLetra};
+        return { usuarios, mostrarPerfilUsuario, borrarAmigo, mostrarVideoUsuario, cerrarModal, cerrarModalVideo, mostrarModal, mostrarVideo, mostrarError, error, videoUrl, idPerfil, amigosLetra};
     }
 }
 </script>
@@ -161,6 +171,8 @@ export default{
     </ion-modal>
 
     <p class="message" v-if="usuarios.length === 0">¡Añade amigos desde el tab social para no perderte nada!</p>
+
+    <ion-toast class="custom-toast" position="top" position-anchor="header" :is-open="mostrarError" :message="error" :duration="3000" @didDismiss="mostrarError=false"></ion-toast>
     
 </template>
 
@@ -192,4 +204,9 @@ ion-modal{
     --ion-toolbar-border-color: transparent;
     --ion-toolbar-background: transparent;
 }
+
+ion-toast.custom-toast::part(message) {
+    font-size: 16px;
+}
+
 </style>

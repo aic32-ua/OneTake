@@ -168,7 +168,7 @@ class ClienteAPI {
                     this.usuarioLogeadoStore.cerrarSesion();
                 }
                 else{
-                    throw new Error('Error al subir el video');
+                    throw new Error('Error enviando peticion de amistad');
                 }      
             }
 
@@ -194,7 +194,7 @@ class ClienteAPI {
                     this.usuarioLogeadoStore.cerrarSesion();
                 }
                 else{
-                    throw new Error('Error al subir el video');
+                    throw new Error('Error al ver las peticiones de amistad');
                 }      
             }
 
@@ -283,7 +283,7 @@ class ClienteAPI {
                     this.usuarioLogeadoStore.cerrarSesion();
                 }
                 else{
-                    throw new Error('Error al subir el video');
+                    throw new Error('Error al ver el listado de amigos');
                 }      
             }
 
@@ -304,48 +304,24 @@ class ClienteAPI {
                 },
             });
 
+            if(!response.ok && response.status !== 401){
+                throw new Error('Error al ver el video');
+            }
+
             if (!response.ok) {
-                if (response.status === 401) {
+                let responseData = await response.json()
+                if (responseData.code!=4) {
                     this.usuarioLogeadoStore.cerrarSesion();
+                    return null
                 }
-                else{
-                    throw new Error('Error al subir el video');
-                }      
+                else {
+                    return responseData.message
+                }  
             }
 
             return await response.blob();
         } catch (error) {
             console.error('Error al ver video de usuario:', error.message);
-            throw error;
-        }
-    }
-
-    async publicarVideo(id, video) {
-        try {
-            const url = `${this.baseURL}/usuarios/${id}/video`;
-            const formData = new FormData();
-            formData.append('video', video);
-
-            const response = await fetch(url, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                },
-                body: formData
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.usuarioLogeadoStore.cerrarSesion();
-                }
-                else{
-                    throw new Error('Error al subir el video');
-                }      
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error al publicar video de usuario:', error.message);
             throw error;
         }
     }
@@ -369,7 +345,7 @@ class ClienteAPI {
                     this.usuarioLogeadoStore.cerrarSesion();
                 }
                 else{
-                    throw new Error('Error al subir el video');
+                    throw new Error('Error al subir la foto');
                 }      
             }
     
