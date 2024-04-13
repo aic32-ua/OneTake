@@ -1,10 +1,11 @@
 <script>
-import { IonIcon } from '@ionic/vue';
+import { IonIcon, IonRippleEffect } from '@ionic/vue';
 import { ref,watch } from 'vue'
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 export default{
     components: {
-        IonIcon
+        IonIcon,
+        IonRippleEffect
     },
     emits: ['buscarUsuarios'],
     setup(props, { emit }){
@@ -14,7 +15,7 @@ export default{
         const nombre = ref(null)
 
         const buscarUsuarios =  () => {
-            if(nombre.value.length > 0 ){
+            if(nombre.value!=null && nombre.value.length > 0 ){
                 emit("buscarUsuarios", nombre.value)
             }
         };
@@ -31,8 +32,9 @@ export default{
 <template>
     <div class="container">
         <input type="text" placeholder="Nombre de usuario" v-model="nombre">
-        <button @click="buscarUsuarios">
+        <button class="ion-activatable" style="overflow: hidden; position: relative;" @click="buscarUsuarios">
             <ion-icon name="search-sharp"></ion-icon>
+            <ion-ripple-effect></ion-ripple-effect>
         </button> 
     </div>
 </template>

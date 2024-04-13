@@ -1,5 +1,5 @@
 <script>
-import { IonAlert, IonPopover, IonContent, IonHeader, IonModal, IonToolbar, IonButton, IonButtons, IonIcon } from '@ionic/vue';
+import { IonAlert, IonPopover, IonContent, IonHeader, IonModal, IonToolbar, IonButton, IonButtons, IonIcon, IonRefresher, IonRefresherContent } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import ClienteAPI from '../ClienteAPI'
 import FotoUpload from './FotoUpload.vue'
@@ -19,6 +19,8 @@ export default{
         IonButton,
         IonButtons,
         IonIcon,
+        IonRefresher,
+        IonRefresherContent,
         FotoUpload,
         ActualizarDatos
     },
@@ -98,24 +100,26 @@ export default{
             }
         };
 
+        const recargarPagina = async (event) => {
+            await obtenerUsuario();
+            event.target.complete();
+        };
+
         watch(usuarioLogeadoStore, () => {
             obtenerUsuario();
         });
 
-        watch(() => route.path, (newPath, oldPath) => {
-            if (newPath == '/tabs/social/perfil') {
-                obtenerUsuario();
-            }
-        });
-
         obtenerUsuario();
 
-        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey, actualizarDatos, actualizarDatosUsu, mostrarVideo, mostrarVideoUsuario, videoUrl};
+        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey, actualizarDatos, actualizarDatosUsu, mostrarVideo, mostrarVideoUsuario, videoUrl, recargarPagina};
     }
 }
 </script>
 
 <template>
+    <ion-refresher slot="fixed" @ionRefresh="recargarPagina($event)">
+        <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
     
     <div class="container">
         <div class="header">

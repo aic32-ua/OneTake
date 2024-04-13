@@ -37,15 +37,17 @@ export default{
   <div class="page-container">
     <h1 class="onetake">OneTake</h1>
     
-    <div :class="{ 'login-form': true, 'error-shake': error }">
-      <input type="text" placeholder="Email" v-model="email" required>
-      <input type="password" placeholder="Contraseña" v-model="password" required>
-      <button class="login-button center-button" @click="iniciarSesion">Entrar</button>
-
-      <div class="error" v-if="error">
-        <p>{{error}}</p>
+    <form @submit.prevent="iniciarSesion">
+      <div :class="{ 'login-form': true, 'error-shake': error }">
+        <input type="text" placeholder="Email" v-model="email" required autocomplete="username">
+        <input type="password" placeholder="Contraseña" v-model="password" required autocomplete="current-password">
+        <button class="login-button center-button" @click="iniciarSesion">Entrar</button>
+  
+        <div class="error" v-if="error">
+          <p>{{error}}</p>
+        </div>
       </div>
-    </div>
+    </form>
 
     <div class="registration-section">
       <p class="color">¿Todavía no eres miembro?</p>

@@ -1,18 +1,22 @@
 <script>
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
-import { IonIcon } from '@ionic/vue';
+import { IonIcon, IonRippleEffect } from '@ionic/vue';
 export default{
     props: ["nick", "video", "id", "tipoLista", "peticion" ,"idPeticion", "foto"],
     emits: ['mostrarPerfil', 'mostrarVideo', 'enviarPeticion', 'aceptarPeticion'],
     components:{
-        IonIcon
+        IonIcon,
+        IonRippleEffect
     },
     setup(props, { emit }) {
         const usuarioLogeadoStore = useUsuarioLogeadoStore();
 
         const mostrarVideo = () => {
-            if(props.video){
+            if(props.tipoLista=="home" && props.video){
                 emit("mostrarVideo", props.id);
+            }
+            else{
+                emit("mostrarPerfil", props.id);
             }
         };
         const mostrarPerfil = () => {
@@ -32,15 +36,16 @@ export default{
 </script>
 
 <template>
-    <div class="container">
+    <div class="container ion-activatable" @click="mostrarPerfil">
         <div class="usuario">
-            <img :class="{ 'video-border': video && tipoLista=='home' }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/65x65'" @click="mostrarVideo">
-            <p @click="mostrarPerfil">{{nick}}</p>
+            <img :class="{ 'video-border': video && tipoLista=='home' }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/65x65'" @click.stop="mostrarVideo">
+            <p>{{nick}}</p>
         </div>
         <button v-if="tipoLista=='buscar' && !peticion" @click="enviarPeticion">Añadir amigo</button>
         <button v-if="tipoLista=='peticiones'" class="iconButton" @click="aceptarPeticion">
             <ion-icon name="checkmark-sharp"></ion-icon>
         </button>
+        <ion-ripple-effect></ion-ripple-effect>
     </div>
 </template>
 
