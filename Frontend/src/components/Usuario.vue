@@ -1,12 +1,11 @@
 <script>
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
-import { IonIcon, IonRippleEffect } from '@ionic/vue';
+import { IonIcon } from '@ionic/vue';
 export default{
     props: ["nick", "video", "id", "tipoLista", "peticion" ,"idPeticion", "foto"],
     emits: ['mostrarPerfil', 'mostrarVideo', 'enviarPeticion', 'aceptarPeticion'],
     components:{
-        IonIcon,
-        IonRippleEffect
+        IonIcon
     },
     setup(props, { emit }) {
         const usuarioLogeadoStore = useUsuarioLogeadoStore();
@@ -36,7 +35,7 @@ export default{
 </script>
 
 <template>
-    <div class="container ion-activatable" @click="mostrarPerfil">
+    <div class="container" @click="mostrarPerfil">
         <div class="usuario">
             <img :class="{ 'video-border': video && tipoLista=='home' }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/65x65'" @click.stop="mostrarVideo">
             <p>{{nick}}</p>
@@ -45,7 +44,6 @@ export default{
         <button v-if="tipoLista=='peticiones'" class="iconButton" @click="aceptarPeticion">
             <ion-icon name="checkmark-sharp"></ion-icon>
         </button>
-        <ion-ripple-effect></ion-ripple-effect>
     </div>
 </template>
 

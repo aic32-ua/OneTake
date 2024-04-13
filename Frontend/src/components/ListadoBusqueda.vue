@@ -1,5 +1,5 @@
 <script>
-import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItem, IonItemSliding, IonItemOption, IonItemOptions, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/vue';
+import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItem, IonItemSliding, IonItemOption, IonItemOptions, IonInfiniteScroll, IonInfiniteScrollContent, IonRippleEffect } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import ClienteAPI from '../ClienteAPI'
 import Usuario from './Usuario.vue'
@@ -26,7 +26,8 @@ export default{
     IonItemOption,
     IonItemOptions,
     IonInfiniteScroll,
-    IonInfiniteScrollContent
+    IonInfiniteScrollContent,
+    IonRippleEffect
 },
     setup(){
         const usuarioLogeadoStore = useUsuarioLogeadoStore();
@@ -81,7 +82,7 @@ export default{
     <Buscador @buscarUsuarios="buscarUsuarios"/>
 
     <ion-list v-if="usuarios.length > 0">
-            <ion-item v-for="(usuario, usuarioIndex) in usuarios" :lines="usuarioIndex === usuarios.length - 1 ? 'none' : 'full'">
+            <ion-item class="ion-activatable" v-for="(usuario, usuarioIndex) in usuarios" :lines="usuarioIndex === usuarios.length - 1 ? 'none' : 'full'">
                 <Usuario
                 :nick=usuario.nick
                 :video=usuario.video
@@ -93,6 +94,7 @@ export default{
                 @enviarPeticion="enviarPeticion"
                 />
             </ion-item>
+            <ion-ripple-effect></ion-ripple-effect>
     </ion-list>
     <ion-infinite-scroll @ionInfinite="ionInfinite" v-if="usuarios.length > 0 && usuarios.length%10===0">
       <ion-infinite-scroll-content v-if="usuarios.length > 0 && usuarios.length%10===0"></ion-infinite-scroll-content>

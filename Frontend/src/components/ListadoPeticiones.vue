@@ -1,5 +1,5 @@
 <script>
-import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItem, IonItemSliding, IonItemOption, IonItemOptions, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/vue';
+import { IonModal, IonButton, IonHeader, IonButtons, IonTitle, IonToolbar, IonContent, IonIcon, IonList, IonItem, IonItemSliding, IonItemOption, IonItemOptions, IonInfiniteScroll, IonInfiniteScrollContent, IonRippleEffect } from '@ionic/vue';
 import {useUsuarioLogeadoStore} from '../stores/UsuarioLogeadoStore.js'
 import { useRoute } from 'vue-router';
 import ClienteAPI from '../ClienteAPI'
@@ -25,7 +25,8 @@ export default{
     IonItemOption,
     IonItemOptions,
     IonInfiniteScroll,
-    IonInfiniteScrollContent
+    IonInfiniteScrollContent,
+    IonRippleEffect
 },
     setup(){
         const route = useRoute();
@@ -94,7 +95,7 @@ export default{
 <template>
     <ion-list v-if="usuarios.length > 0">
         <ion-item-sliding v-for="(usuario, usuarioIndex) in usuarios" :lines="usuarioIndex === usuarios.length - 1 ? 'none' : 'full'">
-            <ion-item>
+            <ion-item class="ion-activatable">
                 <Usuario
                 :nick=usuario.nick
                 :video=usuario.video
@@ -107,7 +108,7 @@ export default{
                 @aceptarPeticion="aceptarPeticion"
                 />
             </ion-item>
-                
+            <ion-ripple-effect></ion-ripple-effect>
             <ion-item-options>
                 <ion-item-option color="danger" @click="rechazarPeticion(usuario.idPeticion)">Borrar</ion-item-option>
             </ion-item-options>
