@@ -94,8 +94,8 @@ export default{
 
 <template>
     <ion-list v-if="usuarios.length > 0">
-        <ion-item-sliding v-for="(usuario, usuarioIndex) in usuarios" :lines="usuarioIndex === usuarios.length - 1 ? 'none' : 'full'">
-            <ion-item class="ion-activatable">
+        <ion-item-sliding v-for="(usuario, usuarioIndex) in usuarios">
+            <ion-item class="ion-activatable" :lines="usuarioIndex === usuarios.length - 1 ? 'none' : 'full'">
                 <Usuario
                 :nick=usuario.nick
                 :video=usuario.video
