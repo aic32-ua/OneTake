@@ -245,7 +245,7 @@ app.post('/usuarios', async function(req,resp){
         })
     }
     try{
-        const hash = await argon2.hash("usu.password");
+        const hash = await argon2.hash(usu.password);
         let creado = await Usuario.create({
             email: usu.email,
             nick: usu.nick,
@@ -281,7 +281,6 @@ app.post('/login', async function(req,resp) {
             message: "Faltan datos"
         })
     }
-
     let usuEmail = await Usuario.findOne({where: { email: usu.email }})
     if(usuEmail==null){
         return resp.status(400).send({
@@ -289,8 +288,7 @@ app.post('/login', async function(req,resp) {
             message: "No existe un usuario con ese email."
         })
     }
-    
-    if(!(passwordHash.verify(usu.password, usuEmail.password))){
+    if(!(await argon2.verify(usuEmail.password, usu.password))){
         return resp.status(400).send({
             code:1,
             message: "Contraseña incorrecta."
