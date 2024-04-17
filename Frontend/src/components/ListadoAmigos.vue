@@ -105,7 +105,6 @@ export default{
 
         watch(() => route.path, (newPath, oldPath) => {
             if (newPath === '/tabs/home') {
-                console.log("entro hoime")
                 obtenerUsuarios();   
             }
         });

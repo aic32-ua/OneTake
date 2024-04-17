@@ -7,7 +7,7 @@ app.use(cors());
 let bp = require('body-parser')
 app.use(bp.json())
 
-let passwordHash = require('password-hash');
+const argon2 = require('argon2');
 
 let jwt = require('jsonwebtoken');
 
@@ -245,10 +245,11 @@ app.post('/usuarios', async function(req,resp){
         })
     }
     try{
+        const hash = await argon2.hash("usu.password");
         let creado = await Usuario.create({
             email: usu.email,
             nick: usu.nick,
-            password: passwordHash.generate(usu.password)
+            password: hash
         });    
         resp.setHeader('Location', 'http://localhost:3000/usuarios/' + creado.id)
         resp.status(201).send(creado)

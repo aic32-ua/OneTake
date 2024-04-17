@@ -19,14 +19,14 @@ services:
       - oneTakeNetwork
 
   rabbitmq:
-    build: ./RabbitMQ
+    image: rabbitmq:3.13.1-management
     ports:
-    - "15673:15672"
+      - "15673:15672"
     networks:
       - oneTakeNetwork
 
   mysql:
-    image: mysql:latest
+    image: mysql:8.3.0
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -41,8 +41,7 @@ services:
       - ./Scripts/script.sql:/docker-entrypoint-initdb.d/script.sql
 
   dozzle:
-    container_name: dozzle
-    image: amir20/dozzle:latest
+    image: amir20/dozzle:v6.5.1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:

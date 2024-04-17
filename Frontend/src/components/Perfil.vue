@@ -111,7 +111,7 @@ export default{
 
         obtenerUsuario();
 
-        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey, actualizarDatos, actualizarDatosUsu, mostrarVideo, mostrarVideoUsuario, videoUrl, recargarPagina};
+        return { usuario , cerrarSesion, botonesAlerta, alertaCerrada, borrarAmigo, subirFoto, obtenerUsuario, actualizarFoto, fotoUsuarioKey, actualizarDatos, actualizarDatosUsu, mostrarVideo, mostrarVideoUsuario, videoUrl, recargarPagina, router};
     }
 }
 </script>
@@ -148,7 +148,7 @@ export default{
                     :buttons="botonesAlerta"
                 ></ion-alert>
             </div>
-            <div v-if="id" class="buttons">
+            <div v-if="id && router.currentRoute.value.path=='/tabs/home'" class="buttons">
                 <button class="wrong-button" @click="borrarAmigo">Borrar amigo</button>
             </div>
         </div>
