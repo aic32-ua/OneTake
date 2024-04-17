@@ -72,23 +72,25 @@ export default{
         };
 
         const obtenerUsuarios = async () => {
-            usuarios.value = await api.verListadoAmigos(usuarioLogeadoStore.idUsu);
-
-            const grupos = {};
-            usuarios.value.forEach(usu => {
-                const letra = usu.nick.charAt(0).toUpperCase();
-                if (!grupos[letra]) {
-                grupos[letra] = [];
-                }
-                grupos[letra].push(usu);
-            });
-
-            const gruposOrdenados = {};
-            Object.keys(grupos).sort().forEach(letra => {
-                gruposOrdenados[letra] = grupos[letra].sort((a, b) => a.nick.localeCompare(b.nick));
-            });
-
-            amigosLetra.value = gruposOrdenados
+            if(usuarioLogeadoStore.idUsu){
+                usuarios.value = await api.verListadoAmigos(usuarioLogeadoStore.idUsu);
+    
+                const grupos = {};
+                usuarios.value.forEach(usu => {
+                    const letra = usu.nick.charAt(0).toUpperCase();
+                    if (!grupos[letra]) {
+                    grupos[letra] = [];
+                    }
+                    grupos[letra].push(usu);
+                });
+    
+                const gruposOrdenados = {};
+                Object.keys(grupos).sort().forEach(letra => {
+                    gruposOrdenados[letra] = grupos[letra].sort((a, b) => a.nick.localeCompare(b.nick));
+                });
+    
+                amigosLetra.value = gruposOrdenados
+            }
         };
 
         const borrarAmigo = async (id) => {

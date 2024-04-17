@@ -22,7 +22,7 @@ export default{
                   this.email = '';
                   this.password = '';
                   this.error = '';
-                  this.$router.push({path: 'tabs'});
+                  this.$router.replace({path: 'tabs'});
                 }
                 else{
                   this.error = resp.message;

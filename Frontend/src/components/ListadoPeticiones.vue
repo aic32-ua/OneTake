@@ -48,15 +48,17 @@ export default{
         };
 
         const obtenerPeticiones = async (page) => {
-            const peticiones = await api.verListadoPeticionesAmistadUsuario(usuarioLogeadoStore.idUsu,page);
-            if(page==1){
-                usuarios.value = [];
-            }
-            for (const peticion of peticiones) {
-                const usuario = await api.obtenerInformacionUsuario(peticion.id_emisor);
-                usuario.id = peticion.id_emisor
-                usuario.idPeticion = peticion.id;
-                usuarios.value.push(usuario);
+            if(usuarioLogeadoStore.idUsu){
+                const peticiones = await api.verListadoPeticionesAmistadUsuario(usuarioLogeadoStore.idUsu,page);
+                if(page==1){
+                    usuarios.value = [];
+                }
+                for (const peticion of peticiones) {
+                    const usuario = await api.obtenerInformacionUsuario(peticion.id_emisor);
+                    usuario.id = peticion.id_emisor
+                    usuario.idPeticion = peticion.id;
+                    usuarios.value.push(usuario);
+                }
             }
         };
 

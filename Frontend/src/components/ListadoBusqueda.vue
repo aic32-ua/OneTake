@@ -73,7 +73,7 @@ export default{
             usuarios.value=[];
         });
 
-        return { usuarios, buscarUsuarios, enviarPeticion, mostrarPerfilUsuario, cerrarModal, borrarAmigo, mostrarModal, idPerfil, ionInfinite};
+        return { usuarios, buscarUsuarios, enviarPeticion, mostrarPerfilUsuario, cerrarModal, borrarAmigo, mostrarModal, idPerfil, ionInfinite, busqueda};
     }
 }
 </script>
@@ -99,6 +99,8 @@ export default{
     <ion-infinite-scroll @ionInfinite="ionInfinite" v-if="usuarios.length > 0 && usuarios.length%10===0">
       <ion-infinite-scroll-content v-if="usuarios.length > 0 && usuarios.length%10===0"></ion-infinite-scroll-content>
     </ion-infinite-scroll>
+
+    <p class="message" v-if="usuarios.length === 0 && busqueda!=null">No se han encontrado resultados.</p>
 
     <ion-modal :is-open="mostrarModal">
         <ion-header>

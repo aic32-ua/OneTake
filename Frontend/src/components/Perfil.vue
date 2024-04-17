@@ -29,7 +29,6 @@ export default{
     setup(props, { emit }){
         const usuarioLogeadoStore = useUsuarioLogeadoStore(); 
         const api = new ClienteAPI();
-        const route = useRoute()
         const router = useRouter()
 
         const botonesAlerta = [
@@ -55,19 +54,22 @@ export default{
         const usuario = ref({})
 
         const obtenerUsuario = async () => {
-            if(!props.id){
-                usuario.value = await api.obtenerInformacionUsuario(usuarioLogeadoStore.idUsu);
-                usuario.value.id = usuarioLogeadoStore.idUsu
-            }
-            else{
-                usuario.value = await api.obtenerInformacionUsuario(props.id);
-                usuario.value.id = props.id
+            if(usuarioLogeadoStore.idUsu){
+                if(!props.id){
+                    usuario.value = await api.obtenerInformacionUsuario(usuarioLogeadoStore.idUsu);
+                    usuario.value.id = usuarioLogeadoStore.idUsu
+                }
+                else{
+                    usuario.value = await api.obtenerInformacionUsuario(props.id);
+                    usuario.value.id = props.id
+                }
             }
         };
 
         const cerrarSesion = () => {
-            usuarioLogeadoStore.cerrarSesion;
+            usuarioLogeadoStore.cerrarSesion();
             router.replace({ path: '/login' });
+            router.go()
         }
 
         const borrarAmigo = () => {
