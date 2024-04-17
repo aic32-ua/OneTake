@@ -41,7 +41,7 @@ export default{
       <div :class="{ 'login-form': true, 'error-shake': error }">
         <input type="text" placeholder="Email" v-model="email" required autocomplete="username">
         <input type="password" placeholder="Contraseña" v-model="password" required autocomplete="current-password">
-        <button class="login-button center-button" @click="iniciarSesion">Entrar</button>
+        <button class="login-button center-button">Entrar</button>
   
         <div class="error" v-if="error">
           <p>{{error}}</p>
