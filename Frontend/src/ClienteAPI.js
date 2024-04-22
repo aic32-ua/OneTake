@@ -72,6 +72,29 @@ class ClienteAPI {
         }
     }
 
+    async validarSesion() {
+        try {
+            const url = `${this.baseURL}/validarSesion`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            });
+
+            if(response.ok){
+                return await response.json()
+            }
+            else{
+                return null
+            }
+
+        } catch (error) {
+            console.error('Error al iniciar sesión:', error.message);
+            throw error;
+        }
+    }
+
     async actualizarDatosUsuario(id, usuario) {
         try {
             const url = `${this.baseURL}/usuarios/${id}`;

@@ -46,6 +46,17 @@ export default{
             mostrarModal.value = true;
         };
 
+        const validarSesion = async () => {
+            let resp = await api.validarSesion();
+
+            if(resp==null){
+                usuarioLogeadoStore.cerrarSesion();
+            }
+            else {
+                usuarioLogeadoStore.iniciarSesion({ newToken: resp.jwt, newId: resp.id})
+            }
+        };
+
         const mostrarVideoUsuario = async (idUsuario) => {
             let video = await api.verVideoUsuario(idUsuario)
             if(video!=null && video instanceof Blob){
@@ -110,6 +121,8 @@ export default{
                 obtenerUsuarios();   
             }
         });
+
+        validarSesion();
 
         return { usuarios, mostrarPerfilUsuario, borrarAmigo, mostrarVideoUsuario, cerrarModal, cerrarModalVideo, mostrarModal, mostrarVideo, mostrarError, error, videoUrl, idPerfil, amigosLetra};
     }

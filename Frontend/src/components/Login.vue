@@ -18,7 +18,7 @@ export default{
                 const cli = new ClienteAPI();
                 const resp = await cli.login(this.email, this.password);
                 if(resp.jwt){
-                  this.usuarioLogeadoStore.iniciarSesion({ newToken: resp.jwt, newUsuario: this.email, newId: resp.id});
+                  this.usuarioLogeadoStore.iniciarSesion({ newToken: resp.jwt, newId: resp.id});
                   this.email = '';
                   this.password = '';
                   this.error = '';

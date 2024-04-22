@@ -991,6 +991,33 @@ app.get('/usuarios/:id/foto', async function(req, resp) {
     });
 });
 
+//18.Validar Sesion
+app.get('/validarSesion', function(req,resp) {
+    const authHeader = req.headers["authorization"]
+    let retCode;
+    if(!authHeader){
+        retCode = {code: 4, msg:"No autorizado"};
+    }
+    else{
+        retCode = obtenerIdToken(authHeader.split(' ')[1])
+    }
+    if(retCode.code != 0){
+        return resp.status(401).send({
+            code:retCode.code,
+            message: retCode.msg
+        })
+    }
+        
+    let payload = {
+        idToken: retCode.id,
+    }
+    resp.status(200).send({
+        jwt: jwt.sign(payload, secret, {expiresIn}),
+        id: retCode.id,
+    })
+
+})
+
 //dev endpoints:
 app.get('/usuarioCompleto/:id',async function(req,resp) {
     id = parseInt(req.params.id)
@@ -1026,22 +1053,6 @@ app.get('/peticiones',async function(req,resp) {
 app.get('/amistad',async function(req,resp) {
     resp.status(200)
     resp.send(await RelacionAmistad.findAll())
-})
-
-app.post('/usuarios/:id/video', upload.single('video'), async function(req, res){
-    await channel.sendToQueue(queue, Buffer.from(req.params.id + path.extname(req.file.originalname)));
-    res.json({ message: 'Video recibido correctamente, en cola para transcodificar.'});
-})
-
-app.get('/usuarios/:id/videoX', async function(req, res){
-    const videoPath = path.join('/mnt/volumen/procesados', req.params.id + '.mp4');
-    fs.access(videoPath, fs.constants.F_OK, (err) => {
-        if (err) {
-            res.status(404).json({ error: 'Video no encontrado.' });
-        } else {
-            res.sendFile(videoPath);
-        }
-    });
 })
 
 async function setupRabbitMQ() {
