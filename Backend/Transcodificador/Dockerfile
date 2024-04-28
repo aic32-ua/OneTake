@@ -6,5 +6,3 @@ COPY . .
 RUN apt-get update && apt-get install -y ffmpeg
 
 RUN npm install
-
-CMD ["node", "transcoder.js"]

@@ -12,11 +12,13 @@ const argon2 = require('argon2');
 let jwt = require('jsonwebtoken');
 
 const secret = "123456";
-const expiresIn = 3600 * 24 * 3; //3 dias, añadir que en cada peticion en la que se envia un token valido, se genere uno nuevo, de forma que no tengas que iniciar sesion a menos que estes 3 dias seguidos sin usar la aplicacion
+const expiresIn = 3600 * 24 * 3; //3 dias, se va renovando automaticamente al usar la app gracias al ultimo endpoint
 
 const path = require('path');
 const fs = require('fs');
 const amqp = require('amqplib');
+
+const cron = require('node-cron');
 
 const queue = 'OneTakeQueue';
 
@@ -427,7 +429,7 @@ app.get('/usuarios/:id',async function(req,resp) {
     resp.status(200).send(item)
 })
 
-//6. buscar usuario por nick paginacion?
+//6. buscar usuario por nick
 app.get('/usuarios/buscar/:nick',async function(req,resp) {
 
     const page = parseInt(req.query.page) || 1;
@@ -1060,6 +1062,35 @@ async function setupRabbitMQ() {
     channel = await connection.createChannel(); //variable global para poder usar la cola en los diferentes endpoints
     await channel.assertQueue(queue, { durable: true });
 }
+
+cron.schedule('16 19 * * *', () => {
+    Usuario.update({ video: false }, { where: {} })
+
+    const ruta = '/mnt/volumen/procesados/';
+
+    fs.readdir(ruta, (err, archivos) => {
+        if (err) {
+          console.error('Error al leer el directorio:', err);
+          return;
+        }
+        
+        archivos.forEach(archivo => {
+          const rutaArchivo = path.join(ruta, archivo);
+          
+          fs.unlink(rutaArchivo, err => {
+            if (err) {
+              console.error('Error al eliminar el archivo:', err);
+              return;
+            }
+            console.log('Archivo eliminado:', rutaArchivo);
+          });
+        });
+      });
+
+    console.log('Tarea cron ejecutada');
+}, {
+    timezone: 'Europe/Madrid'
+});
 
 app.listen(3000, function(){
     setupRabbitMQ();

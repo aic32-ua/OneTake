@@ -40,7 +40,7 @@ export default{
             <img :class="{ 'video-border': video && tipoLista=='home' }" alt="imagen" :src="foto ? 'http://localhost:3000/usuarios/' + id + '/foto': 'https://via.placeholder.com/65x65'" @click.stop="mostrarVideo">
             <p>{{nick}}</p>
         </div>
-        <button v-if="tipoLista=='buscar' && !peticion" @click.stop="enviarPeticion">Añadir amigo</button>
+        <button v-if="tipoLista=='buscar' && !peticion" @click.stop="enviarPeticion">Agregar</button>
         <button v-if="tipoLista=='peticiones'" class="iconButton" @click.stop="aceptarPeticion">
             <ion-icon name="checkmark-sharp"></ion-icon>
         </button>
