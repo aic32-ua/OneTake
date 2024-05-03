@@ -18,6 +18,25 @@ services:
     networks:
       - oneTakeNetwork
 
+  cleaner:
+    build: ./Cleaner
+    volumes:
+      - almacenamientoVideos:/mnt/volumen
+    networks:
+      - oneTakeNetwork
+    container_name: cleaner
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    depends_on:
+      - cleaner
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      ofelia.job-run.clean.schedule: "0 49 16 * * *"
+      ofelia.job-run.clean.container: "cleaner"
+
   rabbitmq:
     image: rabbitmq:3.13.1-management
     ports:

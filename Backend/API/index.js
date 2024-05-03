@@ -1063,35 +1063,6 @@ async function setupRabbitMQ() {
     await channel.assertQueue(queue, { durable: true });
 }
 
-cron.schedule('16 19 * * *', () => {
-    Usuario.update({ video: false }, { where: {} })
-
-    const ruta = '/mnt/volumen/procesados/';
-
-    fs.readdir(ruta, (err, archivos) => {
-        if (err) {
-          console.error('Error al leer el directorio:', err);
-          return;
-        }
-        
-        archivos.forEach(archivo => {
-          const rutaArchivo = path.join(ruta, archivo);
-          
-          fs.unlink(rutaArchivo, err => {
-            if (err) {
-              console.error('Error al eliminar el archivo:', err);
-              return;
-            }
-            console.log('Archivo eliminado:', rutaArchivo);
-          });
-        });
-      });
-
-    console.log('Tarea cron ejecutada');
-}, {
-    timezone: 'Europe/Madrid'
-});
-
 app.listen(3000, function(){
     setupRabbitMQ();
     console.log('Cola creada. Servidor arrancado')
