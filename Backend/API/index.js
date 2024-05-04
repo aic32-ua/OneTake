@@ -69,6 +69,7 @@ const eliminarFoto = async(ruta) => {
 }
 
 const { Sequelize, DataTypes, Op} = require('sequelize');
+const { Console } = require('console');
 
 const sequelize = new Sequelize('OneTake', 'user', '1234', {
   host: 'mysql',
@@ -1017,45 +1018,24 @@ app.get('/validarSesion', function(req,resp) {
         jwt: jwt.sign(payload, secret, {expiresIn}),
         id: retCode.id,
     })
+});
 
-})
+//19. Marcar todos los videos como borrados
+app.delete('/clean', function(req,resp) {
+    const authHeader = req.headers["authorization"]
+    const apiKey = process.env.API_KEY;
 
-//dev endpoints:
-app.get('/usuarioCompleto/:id',async function(req,resp) {
-    id = parseInt(req.params.id)
-    if(isNaN(id)){
-        return resp.status(400).send({
-            code:1,
-            message: "El parametro id debe ser un numero"
+    if(!authHeader || authHeader!=apiKey){
+        return resp.status(401).send({
+            code:4,
+            message: "No autorizado"
         })
     }
 
-    item = await Usuario.findByPk(id)
-    if(!item){
-        return resp.status(404).send({
-            code:3,
-            message: "El dato no existe"
-        })
-    }
-
-    resp.status(200)
-    resp.send(item)
-})
-
-app.get('/usuariosCompleto/',async function(req,resp) {
-    resp.status(200)
-    resp.send(await Usuario.findAll())
-})
-
-app.get('/peticiones',async function(req,resp) {
-    resp.status(200)
-    resp.send(await PeticionAmistad.findAll())
-})
-
-app.get('/amistad',async function(req,resp) {
-    resp.status(200)
-    resp.send(await RelacionAmistad.findAll())
-})
+    Usuario.update({ video: false }, { where: {} })
+    
+    resp.status(200).send();
+});
 
 async function setupRabbitMQ() {
     let connection = await amqp.connect('amqp://rabbitmq');

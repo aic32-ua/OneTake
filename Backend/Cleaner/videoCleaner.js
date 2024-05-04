@@ -20,6 +20,18 @@ fs.readdir(ruta, (err, archivos) => {
         console.log('Archivo eliminado:', rutaArchivo);
         });
     });
+});
+
+async function actualizarDB(){
+    const url = 'http://api:3000/clean';
+    await fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': process.env.API_KEY
+        }
     });
+}
+
+actualizarDB();
 
 console.log('Tarea cron ejecutada');
