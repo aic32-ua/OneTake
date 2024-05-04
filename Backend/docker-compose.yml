@@ -2,7 +2,7 @@ version: '3'
 services:
   api:
     build: ./API
-    command: ["./wait-for-it.sh", "-t", "40", "rabbitmq:5672", "--", "npm", "start"]
+    command: ["./wait-for-it.sh", "-t", "30", "rabbitmq:5672", "--", "npm", "start"]
     ports:
       - "3000:3000"
     volumes:
@@ -14,7 +14,7 @@ services:
 
   transcodificador:
     build: ./Transcodificador
-    command: ["./wait-for-it.sh", "-t", "40", "rabbitmq:5672", "--", "node", "transcoder.js"]
+    command: ["./wait-for-it.sh", "-t", "30", "rabbitmq:5672", "--", "node", "transcoder.js"]
     volumes:
       - almacenamientoVideos:/mnt/volumen
     networks:
@@ -22,6 +22,7 @@ services:
 
   cleaner:
     build: ./Cleaner
+    command: ["./wait-for-it.sh", "-t", "35", "api:3000", "--", "node", "videoCleaner.js"]
     volumes:
       - almacenamientoVideos:/mnt/volumen
     networks:
@@ -38,7 +39,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
-      ofelia.job-run.clean.schedule: "0 28 10 * * *"
+      ofelia.job-run.clean.schedule: "0 7 11 * * *"
       ofelia.job-run.clean.container: "cleaner"
 
   rabbitmq:
