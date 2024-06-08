@@ -90,6 +90,7 @@ export default{
                 :peticion="usuario.peticion"
                 :idPeticion="usuario.idPeticion"
                 :tipoLista="'buscar'"
+                :foto="usuario.foto"
                 @mostrarPerfil="mostrarPerfilUsuario"
                 @enviarPeticion="enviarPeticion"
                 />
